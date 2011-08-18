@@ -1,0 +1,85 @@
+{
+   	"name": "Project Axeman",
+   	"description": "Travian 4 Extension that adds some 'missing' features to the game",
+   	"version": "0.1.3",
+   	"background_page": "background.html",
+   	"options_page": "options.html",
+
+   	"page_action": {
+      		"default_icon": "Icons/icon48.png",
+      		"default_title": "Project Axeman",
+      		"default_popup": "popup.html"
+   	},
+
+   	"icons": {
+      		"128": "Icons/icon128.png",
+      		"16": "Icons/icon16.png",
+      		"48": "Icons/icon48.png"
+   	},
+
+   	"content_scripts": [ {
+      	"js": [ 
+			"jquery.js", 
+			"jqueryui.js",
+			"contentscript.js", 
+			"extensionscript.js"
+		],
+      	"run_at": "document_end",
+      	"matches": [ 
+         	"http://*.travian.ae/*", 
+         	"http://*.travian.com.au/*", 
+         	"http://*.travian.ba/*", 
+         	"http://*.travian.bg/*", 
+         	"http://*.travian.com.br/*", 
+         	"http://*.travian.cl/*", 
+         	"http://*.travian.cn/*", 
+         	"http://*.travian.cz/*", 
+         	"http://*.travian.de/*", 
+         	"http://*.travian.dk/*", 
+         	"http://*.travian.co.ee/*", 
+         	"http://*.travian.com.eg/*", 
+         	"http://*.travian.com/*", 
+         	"http://*.travian.net/*", 
+        	"http://*.travian.fi/*", 
+       		"http://*.travian.fr/*", 
+        	"http://*.travian.gr/*", 
+       	 	"http://*.travianteam.com/*", 
+         	"http://*.travian.hk/*", 
+         	"http://*.travian.com.hr/*", 
+         	"http://*.travian.hu/*", 
+         	"http://*.travian.co.id/*", 
+         	"http://*.travian.co.il/*", 
+         	"http://*.travian.in/*", 
+         	"http://*.travian.ir/*", 
+         	"http://*.travian.it/*", 
+         	"http://*.travian.jp/*", 
+         	"http://*.travian.kr/*", 
+         	"http://*.travian.lt/*", 
+         	"http://*.travian.lv/*", 
+         	"http://*.travian.ma/*", 
+         	"http://*.travian.my/*", 
+         	"http://*.travian.nl/*", 
+         	"http://*.travian.no/*", 
+         	"http://*.travian.ph/*", 
+        	"http://*.travian.pk/*", 
+         	"http://*.travian.pl/*", 
+         	"http://*.travian.pt/*", 
+         	"http://*.travian.ro/*", 
+         	"http://*.travian.rs/*", 
+         	"http://*.travian.ru/*", 
+         	"http://*.travian.sa/*", 
+         	"http://*.travian.se/*", 
+         	"http://*.travian.si/*", 
+         	"http://*.travian.sk/*", 
+         	"http://*.travian.sy/*", 
+         	"http://*.travian.th/*", 
+         	"http://*.travian.tr/*", 
+         	"http://*.travian.tw/*", 
+         	"http://*.travian.com.ua/*", 
+         	"http://*.travian.co.uk/*", 
+         	"http://*.travian.us/*", 
+         	"http://*.travian.com.vn/*", 
+         	"http://*.travian.co.za/*" 
+		]
+	} ]
+}

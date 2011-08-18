@@ -1,0 +1,58 @@
+<!-- 
+	
+	background.html
+	
+	by
+	Aleksandar Toplek, 
+	JustBuild 2011.
+	
+	This file is under FreeBSD license that
+	can be found in README.txt that came
+	with this code.
+	  
+-->
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<script>
+
+		function onRequest(request, sender, sendResponse) {
+			if (request.category === "extension") {
+				if (request.name === "showActionPageMenu") {
+					// Shows PageAction icon/menu
+					chrome.pageAction.show(sender.tab.id);
+
+					// Sends empty response - cleaning
+					sendResponse({});
+				}
+			}
+			else if (request.category === "settings") {
+				sendResponse(RequestSettings(request.name, request.action, request.value));
+			}
+		};
+
+		// RequestSettings
+		function RequestSettings(name, action, value) {
+			if (action === "set") {
+				try {
+					localStorage.setItem(name, value);
+				} catch (e) {
+					if (e == QUOTA_EXCEEDED_ERR) {
+						alert("Quota exceeded!"); //data wasn’t successfully saved due to quota exceed so throw an error
+					}
+				}
+				
+			}
+			else { // action === "get"
+				return localStorage.getItem(name);
+			}
+		}
+
+		// Listens for request to show PageAction
+		chrome.extension.onRequest.addListener(onRequest);
+	  
+		</script>
+	</head>
+	<body></body>
+</html>
