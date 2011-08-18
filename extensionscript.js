@@ -24,26 +24,20 @@ var CBuildMarketFillInJunkResourceTimerInterval = 250;
 // Initialization of extension script (travian page modification)
 Initialize();
 
-// TODO: Comment function
+/**
+ * Initializes all extension functions
+ *
+ * @author Aleksandar Toplek
+ */
 function Initialize() {
 	console.log("Initialize - Initializing...");
 	var startTime = (new Date()).getTime();
 	
+	// Initial settings configuration
+	GlobalInitializeSettings();
+	
 	// Calls for PageAction show
 	chrome.extension.sendRequest({ category: "extension", name: "showActionPageMenu", action: "set" }, function (response) { });
-	
-	chrome.extension.sendRequest({ category: "settings", name: "isFirstInit", action: "get" }, function (response) {
-		if (response == undefined) {
-			chrome.extension.sendRequest({ category: "settings", name: "isFirstInit", action: "set", value: true }, function (response) { });
-			// Check settings
-			chrome.extension.sendRequest({ category: "settings", name: "checkGlobalRemoveInGameHelp", action: "set", value: "On" }, function (response) { });
-			chrome.extension.sendRequest({ category: "settings", name: "checkBuildResourceNeeded", action: "set", value: "On" }, function (response) { });
-			chrome.extension.sendRequest({ category: "settings", name: "checkMarketShowX2Shortcut", action: "set", value: "On" }, function (response) { });
-			chrome.extension.sendRequest({ category: "settings", name: "checkMarketListMyVillages", action: "set", value: "On" }, function (response) { });
-			chrome.extension.sendRequest({ category: "settings", name: "checkMarketShowJunkResource", action: "set", value: "On" }, function (response) { });
-			chrome.extension.sendRequest({ category: "settings", name: "checkSendTroopsListMyVillages", action: "set", value: "On" }, function (response) { });
-		}
-	});
 	
 	var pathname = PageGetPathname();
 	PageProcessAll(pathname);
@@ -52,7 +46,13 @@ function Initialize() {
 	console.log("Initialize - Finished successfully! (" + (endTime - startTime) + ")");
 };
 
-// TODO: Comment function
+/**
+ * Pathname of current page.
+ *
+ * @author Aleksandar Toplek
+ *
+ * @return {String} Returns an pathname of current web page without query.
+ */
 function PageGetPathname() {
 	console.log("PageGetPathname - Reading current page...");
 	
@@ -63,7 +63,12 @@ function PageGetPathname() {
 	return currentPath;
 };
 
-// TODO: Comment function
+/**
+ * Runs all scripts that changes page content.
+ * This should be called after all information is retrieved from page.
+ *
+ * @author Aleksandar Toplek
+ */
 function PageProcessAll(pathname) {
 	console.log("PageProcessAll - Starting...");
 	
@@ -81,7 +86,14 @@ function PageProcessAll(pathname) {
 	else return;
 };
 
-// TODO: Comment function
+/**
+ * Determines where in gameplay current page is.
+ *
+ * @author Aleksandar Toplek
+ *
+ * @return {String} Returns a name of gameply part.
+ *					(e.g. Map, SendTroops, VillageIn, ...)
+ */
 function PageGetWhere(pathname) {
 	if 		(pathname.match(/dorf1.php/gi)) return "VillageOut";
 	else if (pathname.match(/dorf2.php/gi)) return "VillageIn";
@@ -93,7 +105,38 @@ function PageGetWhere(pathname) {
 	return undefined;
 };
 
-// TODO: Comment function
+/**
+ * Initializes settings to default on first initialization.
+ *
+ * @author Aleksandar Toplek
+ */
+function GlobalInitializeSettings() {
+	chrome.extension.sendRequest({ category: "settings", name: "wasInitialized", action: "get" }, function (response) {
+		console.log("GlobalInitializeSettings - wasInitialized [" + response +"]")
+		if (response == undefined) {
+			console.log("GlobalInitializeSettings - First settings configuration...");
+			
+			chrome.extension.sendRequest({ category: "settings", name: "wasInitialized", action: "set", value: true }, function (response) { });
+			// Check settings
+			chrome.extension.sendRequest({ category: "settings", name: "checkGlobalRemoveInGameHelp", action: "set", value: "On" }, function (response) { });
+			chrome.extension.sendRequest({ category: "settings", name: "checkBuildResourceNeeded", action: "set", value: "On" }, function (response) { });
+			chrome.extension.sendRequest({ category: "settings", name: "checkMarketShowX2Shortcut", action: "set", value: "On" }, function (response) { });
+			chrome.extension.sendRequest({ category: "settings", name: "checkMarketListMyVillages", action: "set", value: "On" }, function (response) { });
+			chrome.extension.sendRequest({ category: "settings", name: "checkMarketShowJunkResource", action: "set", value: "On" }, function (response) { });
+			chrome.extension.sendRequest({ category: "settings", name: "checkSendTroopsListMyVillages", action: "set", value: "On" }, function (response) { });
+			
+			console.log("GlobalInitializeSettings - All settings initialized!");
+		}
+	});
+}
+
+/**
+ * Filters all villages from right village list and only returns non active ones.
+ *
+ * @author Aleksandar Toplek
+ *
+ * @return {Array} Returns array of 'a' elemets with href to village view and name in text.
+ */
 function GlobalGetVillagesList() {
 	console.log("GlobalGetVillagesList - Getting village list...");
 	
@@ -103,7 +146,13 @@ function GlobalGetVillagesList() {
 	return villagesList;
 };
 
-// TODO: Comment function
+/**
+ * Removes in game help link from every travian page.
+ * On some servers this wont remove stone and book since they are
+ * on one static image, it will only remove question mark and link.
+ *
+ * @author Aleksandar Toplek
+ */
 function GlobalRemoveInGameHelp() {	
 	console.log("GlobalRemoveInGameHelp - Removing in game help...");
 	
@@ -112,7 +161,11 @@ function GlobalRemoveInGameHelp() {
 	console.log("GlobalRemoveInGameHelp - In game help removed!");
 };
 
-// TODO: Comment function
+/**
+ * Calls all Build related functions.
+ *
+ * @author Aleksandar Toplek
+ */
 function GlobalInBuild() {
 	console.log("GlobalInBuild - In buils calls...");
 	
@@ -126,7 +179,11 @@ function GlobalInBuild() {
 	console.log("GlobalInBuild - In build finished successfully!");
 };
 
-// TODO: Comment function
+/**
+ * Calls all Send troops related functions.
+ *
+ * @author Aleksandar Toplek
+ */
 function GlobalInSendTroops() {
 	console.log("GlobalInSendTroops - In send troops calls...");
 	
@@ -138,8 +195,15 @@ function GlobalInSendTroops() {
 	console.log("GlobalInSendTroops - In send troops finished successfully!");
 };
 
-// TODO: Comment function
+/**
+ * Calculates resource difference.
+ * A resource difference is between storage and cost.
+ *
+ * @author Aleksandar Toplek
+ */
 function BuildCalculateResourcesDifference() {
+	// TODO: Seperate building cost and unit cost 
+	// TODO: Unit cost should be difference between NUMBER units and storage
 	console.log("BuildCalculateResourcesDifference - Calculating resource differences...");
 	
 	for (var index = 0; index < 4; index++) {
@@ -160,7 +224,11 @@ function BuildCalculateResourcesDifference() {
 	console.log("BuildCalculateResourcesDifference - Resource differences calculated!");
 };
 
-// TODO: Comment function
+/**
+ * Calls all marketplace related functions
+ *
+ * @author Aleksandar Toplek
+ */
 function BuildMarketCalls() {
 	console.log("BuildMarketCalls - Marketplace calls...");
 	
@@ -190,13 +258,18 @@ function BuildMarketCalls() {
 	console.log("BuildMarketCalls - Marketplace calls finished...");
 };
 
-// TODO: Comment function
-// TODO: Log function
+/**
+ * Registers an timer that calls BuildMarketFillInJunkResource multiple times
+ *
+ * @author Aleksandar Toplek
+ */
 function BuildMarketRegisterTimerFillInJunkResource(args) {
 	window.setInterval(
 		BuildMarketFillInJunkResource,
 		CBuildMarketFillInJunkResourceTimerInterval,
 		args);
+		
+	console.log("BuildMarketRegisterTimerFillInJunkResource - Timer set to interval [" + CBuildMarketFillInJunkResourceTimerInterval + "]")
 };
 
 // TODO: Comment function
