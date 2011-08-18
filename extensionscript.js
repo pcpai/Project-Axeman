@@ -29,10 +29,26 @@ function Initialize() {
 	console.log("Initialize - Initializing...");
 	var startTime = (new Date()).getTime();
 	
+	// Calls for PageAction show
+	chrome.extension.sendRequest({ category: "extension", name: "showActionPageMenu", action: "set" }, function (response) { });
+	
+	chrome.extension.sendRequest({ category: "settings", name: "isFirstInit", action: "get" }, function (response) {
+		if (response == undefined) {
+			chrome.extension.sendRequest({ category: "settings", name: "isFirstInit", action: "set", value: true }, function (response) { });
+			// Check settings
+			chrome.extension.sendRequest({ category: "settings", name: "checkGlobalRemoveInGameHelp", action: "set", value: "On" }, function (response) { });
+			chrome.extension.sendRequest({ category: "settings", name: "checkBuildResourceNeeded", action: "set", value: "On" }, function (response) { });
+			chrome.extension.sendRequest({ category: "settings", name: "checkMarketShowX2Shortcut", action: "set", value: "On" }, function (response) { });
+			chrome.extension.sendRequest({ category: "settings", name: "checkMarketListMyVillages", action: "set", value: "On" }, function (response) { });
+			chrome.extension.sendRequest({ category: "settings", name: "checkMarketShowJunkResource", action: "set", value: "On" }, function (response) { });
+			chrome.extension.sendRequest({ category: "settings", name: "checkSendTroopsListMyVillages", action: "set", value: "On" }, function (response) { });
+		}
+	});
+	
 	var pathname = PageGetPathname();
 	PageProcessAll(pathname);
 	
-	var endTime = (new Date()).getTime();		
+	var endTime = (new Date()).getTime();
 	console.log("Initialize - Finished successfully! (" + (endTime - startTime) + ")");
 };
 
@@ -56,7 +72,8 @@ function PageProcessAll(pathname) {
 	console.log("PageProcessAll - Pathname [" + pathname + "] mathched with [" + where + "]");
 	
 	chrome.extension.sendRequest({ category: "settings", name: "checkGlobalRemoveInGameHelp", action: "get" }, function (response) {
-		if (response === "On") GlobalRemoveInGameHelp()
+		console.log("PageProcessAll - checkGlobalRemoveInGameHelp [" + response + "]")
+		if (response === "On" | response == undefined) GlobalRemoveInGameHelp()
 	});
 
 	if (where === "Build") GlobalInBuild();
@@ -78,32 +95,53 @@ function PageGetWhere(pathname) {
 
 // TODO: Comment function
 function GlobalGetVillagesList() {
-	return $("div[id='villageList'] > div[class='list'] > ul > li[class*='entry'] > a[class!='active']");
+	console.log("GlobalGetVillagesList - Getting village list...");
+	
+	var villagesList = $("div[id='villageList'] > div[class='list'] > ul > li[class*='entry'] > a[class!='active']");
+	
+	console.log("GlobalGetVillagesList - Village list: " + villagesList);
+	return villagesList;
 };
 
 // TODO: Comment function
 function GlobalRemoveInGameHelp() {	
+	console.log("GlobalRemoveInGameHelp - Removing in game help...");
+	
 	$("#ingameManual").remove();
+	
+	console.log("GlobalRemoveInGameHelp - In game help removed!");
 };
 
 // TODO: Comment function
 function GlobalInBuild() {
+	console.log("GlobalInBuild - In buils calls...");
+	
 	chrome.extension.sendRequest({ category: "settings", name: "checkBuildResourceNeeded", action: "get" }, function (response) {
-		if (response === "On") BuildCalculateResourcesDifference();
+		console.log("GlobalInBuild - checkBuildResourceNeeded [" + response + "]");
+		if (response === "On" | response == undefined) BuildCalculateResourcesDifference();
 	});
 
 	if ($(".gid17").length) BuildMarketCalls();
+	
+	console.log("GlobalInBuild - In build finished successfully!");
 };
 
 // TODO: Comment function
 function GlobalInSendTroops() {
+	console.log("GlobalInSendTroops - In send troops calls...");
+	
 	chrome.extension.sendRequest({ category: "settings", name: "checkSendTroopsListMyVillages", action: "get" }, function (response) {
-		if (response === "On") SendTroopsFillVillagesList();
+		console.log("GlobalInSendTroops - checkSendTroopsListMyVillages [" + response + "]")
+		if (response === "On" | response == undefined) SendTroopsFillVillagesList();
 	});
+	
+	console.log("GlobalInSendTroops - In send troops finished successfully!");
 };
 
 // TODO: Comment function
 function BuildCalculateResourcesDifference() {
+	console.log("BuildCalculateResourcesDifference - Calculating resource differences...");
+	
 	for (var index = 0; index < 4; index++) {
 		var inWarehouse = parseInt($("#l" + (index + 1)).text().split("/")[0]);
 
@@ -114,35 +152,46 @@ function BuildCalculateResourcesDifference() {
 			var div = "<div style='color:" + color + "'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(" + diff + ")</div>";
 			
 			$(this).append(div);
+			
+			console.log("BuildCalculateResourcesDifference - r" + (index + 1) + " diff[" + diff + "]");
 		});
 	}
+	
+	console.log("BuildCalculateResourcesDifference - Resource differences calculated!");
 };
 
 // TODO: Comment function
 function BuildMarketCalls() {
+	console.log("BuildMarketCalls - Marketplace calls...");
+	
 	var traderMaxTransport = BuildMarketGetTraderMaxTransport();
 	var tradersAvailable = BuildMarketGetTradersAvailable();
 	
-	console.info("BuildMarketCalls - traderMaxTransport: " + traderMaxTransport);
-	console.info("BuildMarketCalls - tradersAvailable: " + tradersAvailable);
+	console.info("BuildMarketCalls - traderMaxTransport [" + traderMaxTransport + "]");
+	console.info("BuildMarketCalls - tradersAvailable [" + tradersAvailable + "]");
 	
 	chrome.extension.sendRequest({ category: "settings", name: "checkMarketListMyVillages", action: "get" }, function (response) {
-		if (response === "On") BuildMarketFillVillagesList();
+		console.log("BuildMarketCalls - checkMarketListMyVillages [" + response + "]");
+		if (response === "On" | response == undefined) BuildMarketFillVillagesList();
 	});
 
 	BuildMarketAddTransportShortcuts(traderMaxTransport);
 
 	chrome.extension.sendRequest({ category: "settings", name: "checkMarketShowJunkResource", action: "get" }, function (response) {
-		if (response === "On") {
+		console.log("BuildMarketCalls - checkMarketShowJunkResource [" + response + "]");
+		if (response === "On" | response == undefined) {
 			BuildMarketInsertJunkResourceTable();
 			BuildMarketRegisterTimerFillInJunkResource(
 				[tradersAvailable, traderMaxTransport]
 			);
 		}
 	});
+	
+	console.log("BuildMarketCalls - Marketplace calls finished...");
 };
 
 // TODO: Comment function
+// TODO: Log function
 function BuildMarketRegisterTimerFillInJunkResource(args) {
 	window.setInterval(
 		BuildMarketFillInJunkResource,
@@ -151,11 +200,13 @@ function BuildMarketRegisterTimerFillInJunkResource(args) {
 };
 
 // TODO: Comment function
+// TODO: Log function
 function BuildMarketInsertJunkResourceTable() {
 	$(".send_res > tbody").append("<tr><td></td><td></td><td class='currentLoaded'>0 </td><td class='maxRes'>/ 0</td></tr><tr><td></td><td></td><td>Junk:</td><td class='junkAmount'>0 (0)</td></tr>");
 };
 
 // TODO: Comment function
+// TODO: Log function
 function BuildMarketFillInJunkResource(args) {
 	// args
 	// 		- 1: traderMaxTransport
@@ -190,6 +241,7 @@ function BuildMarketFillInJunkResource(args) {
 };
 
 // TODO: Comment function
+// TODO: Log function
 function BuildMarketGetTradersAvailable() {
 	var tradersSource = $("div[class*='traderCount'] > div:last").text();
 
@@ -206,11 +258,13 @@ function BuildMarketGetTradersAvailable() {
 };
 
 // TODO: Comment function
+// TODO: Log function
 function BuildMarketGetTraderMaxTransport() {
 	return parseInt($(".send_res > tbody > tr:eq(0) > .max > a").text()) || 0;
 };
 
 // TODO: Comment function
+// TODO: Log function
 function BuildMarketFillVillagesList() {
 	var selectData = GlobalGetVillagesList();
 	var selectInput = _selectB("EnterVillageName", "text village", "dname");
@@ -225,6 +279,7 @@ function BuildMarketFillVillagesList() {
 };
 
 // TODO: Comment function
+// TODO: Log function
 function BuildMarketAddTransportShortcuts(traderMaxTransport) {
 	// SAMPLE: "<a href='#' onmouseup='add_res(1);' onclick='return false;'>1000</a>"
 
@@ -235,7 +290,7 @@ function BuildMarketAddTransportShortcuts(traderMaxTransport) {
 	}
 
 	chrome.extension.sendRequest({ category: "settings", name: "checkMarketShowX2Shortcut", action: "get" }, function (response) {
-		if (response === "On") {
+		if (response === "On" | response == undefined) {
 			for (var index = 0; index < 4; index++) {
 				var addCall = "add_res(" + (index + 1) + ");";
 				var strX2 = "/ <a href='#' onmouseup='" + addCall + addCall + "' onclick='return false;'>" + traderMaxTransport * 2 + "</a><br>";
@@ -246,6 +301,7 @@ function BuildMarketAddTransportShortcuts(traderMaxTransport) {
 };
 
 // TODO: Comment function
+// TODO: Log function
 function SendTroopsFillVillagesList() {
 	var selectData = GlobalGetVillagesList();
 	var selectInput = _selectB("enterVillageName", "text village", "dname");

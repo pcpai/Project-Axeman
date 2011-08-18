@@ -37,15 +37,18 @@
 			if (action === "set") {
 				try {
 					localStorage.setItem(name, value);
+					console.log("Setting " + name + " SET [" + value + "]");
 				} catch (e) {
 					if (e == QUOTA_EXCEEDED_ERR) {
-						alert("Quota exceeded!"); //data wasn’t successfully saved due to quota exceed so throw an error
+						alert("Quota exceeded!"); //data wasnï¿½t successfully saved due to quota exceed so throw an error
 					}
 				}
 				
 			}
 			else { // action === "get"
-				return localStorage.getItem(name);
+				var returnValue = localStorage.getItem(name);
+				console.log("Setting " + name + " GET [" + returnValue + "]");
+				return returnValue;
 			}
 		}
 
