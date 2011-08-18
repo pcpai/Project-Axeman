@@ -7,7 +7,7 @@
 	JustBuild 2011.
 	
 	This file is under FreeBSD license that
-	can be found in README.txt that came
+	can be found in LICENSE.txt that came
 	with this code.
 	  
 -->
@@ -37,6 +37,7 @@
 				$('#tabs').tabs();
 
 				// General
+				SetupCheckboxButton("checkGlobalRemoveInGameHelp");
 
 				// Build
 				SetupCheckboxButton("checkBuildResourceNeeded");
@@ -56,7 +57,7 @@
 				//     ...
 				// } catch (e) {
 				//     if (e == QUOTA_EXCEEDED_ERR) {
-				//         alert(‘Quota exceeded!’); //data wasn’t successfully saved due to quota exceed so throw an error
+				//         alert(ï¿½Quota exceeded!ï¿½); //data wasnï¿½t successfully saved due to quota exceed so throw an error
 				//     }
 				// }
 
@@ -95,7 +96,17 @@
 			</ul>
 			<div id="tabs-1" class="ui-tabs-panel ui-widget-content ui-corner-bottom">
 
-				<p>There is no general settings currently available...</p>
+				<table>
+				
+					<tr>
+						<td>Remove in game help&nbsp;&nbsp;&nbsp;&nbsp;</td>
+						<td>
+							<input type="checkbox" id="checkGlobalRemoveInGameHelp" class="ui-helper-hidden-accessible">
+							<label id="checkGlobalRemoveInGameHelpLabel" for="checkGlobalRemoveInGameHelp" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button" aria-disabled="false" />
+						</td>						
+					</tr>
+
+				</table>
 
 			</div>
 			<div id="tabs-2" class="ui-tabs-panel ui-widget-content ui-corner-bottom ui-tabs-hide">

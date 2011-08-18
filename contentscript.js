@@ -7,7 +7,7 @@
 	JustBuild 2011.
 	
 	This file is under FreeBSD license that
-	can be found in README.txt that came
+	can be found in LICENSE.txt that came
 	with this code.
 	  
 */
