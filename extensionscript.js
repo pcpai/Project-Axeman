@@ -83,6 +83,11 @@ function PageProcessAll(pathname) {
 		if (response === "On" | response == undefined) GlobalRemoveInGameHelp()
 	});
 
+	chrome.extension.sendRequest({ category: "settings", name: "checkGlobalStorageOverflowTimeout", action: "get" }, function (response) {
+		console.log("PageProcessAll - checkGlobalStorageOverflowTimeout [" + response + "]")
+		if (response === "On" | response == undefined) GlobalOverflowTimer();
+	});
+
 	if (where === "Build") GlobalInBuild();
 	else if (where === "SendTroops") GlobalInSendTroops();
 	else return;
@@ -121,10 +126,12 @@ function GlobalInitializeSettings() {
 			chrome.extension.sendRequest({ category: "settings", name: "wasInitialized", action: "set", value: true }, function (response) { });
 			// Check settings
 			chrome.extension.sendRequest({ category: "settings", name: "checkGlobalRemoveInGameHelp", action: "set", value: "On" }, function (response) { });
+			chrome.extension.sendRequest({ category: "settings", name: "checkGlobalStorageOverflowTimeout", action: "set", value: "On" }, function (response) { });
 			chrome.extension.sendRequest({ category: "settings", name: "checkBuildResourceNeeded", action: "set", value: "On" }, function (response) { });
 			chrome.extension.sendRequest({ category: "settings", name: "checkMarketShowX2Shortcut", action: "set", value: "On" }, function (response) { });
 			chrome.extension.sendRequest({ category: "settings", name: "checkMarketListMyVillages", action: "set", value: "On" }, function (response) { });
 			chrome.extension.sendRequest({ category: "settings", name: "checkMarketShowJunkResource", action: "set", value: "On" }, function (response) { });
+			chrome.extension.sendRequest({ category: "settings", name: "checkMarketShowSumIncomingResources", action: "set", value: "On" }, function (response) { });
 			chrome.extension.sendRequest({ category: "settings", name: "checkSendTroopsListMyVillages", action: "set", value: "On" }, function (response) { });
 			
 			console.log("GlobalInitializeSettings - All settings initialized!");
@@ -162,6 +169,70 @@ function GlobalRemoveInGameHelp() {
 	
 	console.log("GlobalRemoveInGameHelp - In game help removed!");
 };
+
+/**
+ * Informs about warehouse and grany overflow
+ */
+function GlobalOverflowTimer() {
+	console.log("GlobalOverflowTimer - Initializing...");
+	
+	var perHour 	= [0, 0, 0, 0];
+	var  scriptText = $("script:contains('resources.production')").text();
+
+	// From http://txt2re.com/index-javascript.php3?s=resources.production%20=%20{%20%27l1%27:%201250,%27l2%27:%201500,%27l3%27:%201250,%27l4%27:%20508};&15&13&12&11&17
+	var re = '.*?\\d+.*?(\\d+).*?\\d+.*?(\\d+).*?\\d+.*?(\\d+)+.*?\\d+.*?(\\d+)';
+	var p = new RegExp(re, ["i"]);
+	var m = p.exec(scriptText);
+	if (m != null) {
+		perHour[0] = m[1]; perHour[1] = m[2];
+		perHour[2] = m[3]; perHour[3] = m[4];
+	
+		console.log("GlobalOverflowTimer - Resources per hour: " + perHour[0] + " " + perHour[1] + " " + perHour[2] + " " + perHour[3]);
+	}
+	
+	$("#res").children().each(function(index) {
+		// Skips crop consumption
+		if (index !== 4) {
+			var current 	= GlobalGetWarehousAmount(index + 1);
+			var max 		= GlobalGetWarehousMax(index + 1);
+			var timeLeft 	= (max - current) / perHour[index];
+	
+			console.log("GlobalOverflowTimer - l" + (index + 1) + " appended!");
+			
+			$(this).append("<div style='background-color: #EFF5FD;'><b><p id='paResourceOverflowTime" + index + "' style='text-align: right;'>" + _hoursToTime(timeLeft) + "</p></b></div>");
+			
+			setInterval(function() {
+				$("#paResourceOverflowTime" + index).each(function(index) {
+					var hours = _timeToHours($(this).text());
+					hours += 0.0002778549597110; // 1 / ~3600 (3599 because of calculation error)
+					$(this).text(_hoursToTime(hours));
+					
+					if (hours < 2) $(this).attr("style", "text-align: right; background-color:#FFCC33;");
+					else if (hours < 0.75) (this).attr("style", "text-align: right; background-color:#B20C08;");
+					else (this).attr("style", "text-align: right;");
+				});	
+			}, 1000);
+			
+			console.log("GlobalOverflowTimer - l" + (index + 1) + " timer registered!");
+		}
+	});
+	console.log("GlobalOverflowTimer - Finished!");
+};
+
+// TODO: Comment function
+function GlobalGetWarehousAmount(index) {
+	return parseInt(GlobalGetWarehousInfo(index).split("/")[0]);
+}
+
+// TODO: Comment function
+function GlobalGetWarehousMax(index) {
+	return parseInt(GlobalGetWarehousInfo(index).split("/")[1]);
+}
+
+// TODO: Comment function
+function GlobalGetWarehousInfo(index) {
+	return $("#l" + (index)).text();
+}
 
 /**
  * Calls all Build related functions.
@@ -209,7 +280,7 @@ function BuildCalculateResourcesDifference() {
 	console.log("BuildCalculateResourcesDifference - Calculating resource differences...");
 	
 	for (var index = 0; index < 4; index++) {
-		var inWarehouse = parseInt($("#l" + (index + 1)).text().split("/")[0]);
+		var inWarehouse = GlobalGetWarehousAmount(index + 1);
 
 		$("span[class*='resources r" + (index + 1) + "']").each(function (i) {
 			var res = parseInt($(this).text());
@@ -472,6 +543,34 @@ function SendTroopsFillVillagesList() {
 	
 	$(".compactInput").html(selectInput);
 };
+
+function _timeToHours(time) {
+	var split = time.split(":");
+	
+	var hours = parseInt(split[0]) + (parseInt(split[1]) / 60) + (parseInt(split[2]) / 3600);
+	
+	return hours;
+}
+
+function _hoursToTime(hours) {
+	
+	var _hours = hours;
+	_hours = Math.floor(_hours);
+	hours -= _hours;
+	hours *= 60;
+	
+	var _minutes = hours; 
+	_minutes = Math.floor(_minutes);
+	hours -= _minutes;
+	hours *= 60;
+	
+	var _seconds = hours;
+	_seconds = Math.floor(_seconds);
+	
+	return 	(_hours < 10 ? '0' + _hours : _hours) + ":" + 
+			(_minutes < 10 ? '0' + _minutes : _minutes) + ":" + 
+			(_seconds < 10 ? '0' + _seconds : _seconds);
+}
 
 // TODO: Comment function
 function _getAttrNumber (element, attribute) {
