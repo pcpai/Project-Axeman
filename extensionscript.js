@@ -15,8 +15,10 @@
 // TODO: 	Internationalization
 // 			http://code.google.com/chrome/extensions/i18n.html
 
+// TODO: Setting variables preloading
+
 // Global variables
-//var CurrentURL = "/dorf1.php";
+
 
 // Global constants
 var CBuildMarketFillInJunkResourceTimerInterval = 250;
@@ -255,6 +257,11 @@ function BuildMarketCalls() {
 		}
 	});
 	
+	chrome.extension.sendRequest({ category: "settings", name: "checkMarketShowSumIncomingResources", action: "get" }, function (response) {
+		console.log("BuildMarketCalls - checkMarketShowSumIncomingResources [" + response + "]");
+		if (response === "On" | response == undefined) BuildMarketIncomingSum();
+	});
+	
 	console.log("BuildMarketCalls - Marketplace calls finished...");
 };
 
@@ -372,6 +379,84 @@ function BuildMarketAddTransportShortcuts(traderMaxTransport) {
 		}
 	});
 };
+
+/**
+ * Puts table with resource sum of incoming trades to beginning
+ *
+ * @author Aleksandar Toplek
+ */
+function BuildMarketIncomingSum() {
+	console.log("BuildMarketIncomingSum - Generating table...");
+	
+	var sum 		= [0, 0, 0, 0];
+	var count 		= 0;
+	var tableIndex 	= 0;
+	
+	var maxTime 	= 0; // Temp variable
+	$(".traders").each(function(index) {
+		var bodys = $(this).children("tbody");
+		if (bodys.length === 2) {
+			// Gets max time and timer name
+			var timeSpan 	= $(bodys[0].children).children("td").children("div:first").children();
+			var time 		= timeSpan.text();
+			var timeSplit 	= time.split(":");
+			var timeInteger = timeSplit[0] * 3600 + timeSplit[1] * 60 + timeSplit [2];
+			
+			if (timeInteger > maxTime) {
+				maxTime 	= timeInteger;
+				tableIndex 	= index;
+				count++;
+			}
+			
+			// Gets resources and sums it to total
+			var res 		= $(bodys[1].children).children("td").children().text();
+			var resSplit 	= res.split(" ");
+			
+			for (var i = 0; i < 4; ++i) {
+				sum[i] += parseInt(resSplit[i + 1]);
+			};
+		}
+	});
+	
+	// Checks if any incoming trade exists
+	if (count > 0) {
+		// Recreate table with custom text
+		var sourceTable = $(".traders:eq(" + tableIndex + ")");
+		
+		var customTable = $(sourceTable.outerHTML());
+	
+		// Head customization
+		customTable.children("thead").children().children().each(function(index) {
+			if (index === 0) $(this).html("Total incoming");
+			else $(this).html("Incoming from " + count + " villages");
+		});
+		
+		customTable.children("tbody:first").children().children("td").children(".in").children().attr("id", "paIncomingSumTimer");
+		
+		// Resource customization
+		customTable.children("tbody:last").children().children("td").children().html(
+			"<img class='r1' src='img/x.gif' alt='wood'> " + sum[0] + "&nbsp;&nbsp;" + 
+			"<img class='r2' src='img/x.gif' alt='clay'> " + sum[1] + "&nbsp;&nbsp;" + 
+			"<img class='r3' src='img/x.gif' alt='iron'> " + sum[2] + "&nbsp;&nbsp;" + 
+			"<img class='r4' src='img/x.gif' alt='crop'> " + sum[3] + "&nbsp;&nbsp;"
+		);
+		
+		console.log("BuildMarketIncomingSum - Table generated! Appending table to beginning...");
+		
+		// Appends custom table to beginning
+		$(".traders:first").before(customTable.outerHTML());
+		
+		console.log("BuildMarketIncomingSum - Table appended successfully! Asigning timer...");
+		
+		// Updates incoming left time every 100 ms to original table value
+		setInterval(function() {
+			$("#paIncomingSumTimer").text(
+				sourceTable.children("tbody:first").children().children("td").children(".in").children().text());
+		}, 100);
+	}
+	
+	console.log("BuildMarketIncomingSum - Finished successfully!");
+}
 
 // TODO: Comment function
 // TODO: Log function
