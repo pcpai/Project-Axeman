@@ -1,84 +1,127 @@
+/*
+
+    manifest.json
+
+    by
+    Aleksandar Toplek,
+    JustBuild 2011.
+
+    LICENSE: 
+
+        Copyright 2011 JustBuild Development. All rights reserved.
+
+        Redistribution and use in source and binary forms, with or without 
+        modification, are permitted provided that the following conditions 
+        are met:
+
+            1. Redistributions of source code must retain the above copyright 
+               notice, this list of conditions and the following disclaimer.
+
+            2. Redistributions in binary form must reproduce the above copyright 
+               notice, this list of conditions and the following disclaimer in 
+               the documentation and/or other materials provided with the 
+               distribution.
+
+        THIS SOFTWARE IS PROVIDED BY JUSTBUILD DEVELOPMENT ''AS IS'' AND ANY 
+        EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+        IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
+        PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL JUSTBUILD DEVELOPMENT OR
+        CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
+        EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+        PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR 
+        PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+        LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+        NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+        SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+        The views and conclusions contained in the software and documentation 
+        are those of the authors and should not be interpreted as representing 
+        official policies, either expressed or implied, of JustBuild Development
+
+*/
+
 {
-   	"name": "Project Axeman",
-   	"description": "Travian 4 Extension that adds some 'missing' features to the game",
-   	"version": "0.1.5",
-   	"background_page": "background.html",
-   	"options_page": "options.html",
+    "name":             "Project Axeman",
+    "description":      "Travian 4 Extension that adds some 'missing' features to the game",
+    "version":          "0.1.5",
+    
+    "background_page":  "Pages/Background.html",
+    "options_page":     "Pages/Options.html",
+    
+    "page_action": {
+        "default_icon": "Icons/icon48.png",
+        "default_title": "Project Axeman",
+        "default_popup": "Pages/Popup.html"
+    },
 
-   	"page_action": {
-      		"default_icon": "Icons/icon48.png",
-      		"default_title": "Project Axeman",
-      		"default_popup": "popup.html"
-   	},
+    "icons": {
+        "128":  "Icons/icon128.png",
+        "16":   "Icons/icon16.png",
+        "48":   "Icons/icon48.png"
+    },
 
-   	"icons": {
-      		"128": "Icons/icon128.png",
-      		"16": "Icons/icon16.png",
-      		"48": "Icons/icon48.png"
-   	},
-
-   	"content_scripts": [ {
-      	"js": [ 
-			"jquery.js", 
-			"jqueryui.js",
-			"extensionscript.js"
-		],
-      	"run_at": "document_end",
-      	"matches": [ 
-         	"http://*.travian.ae/*", 
-         	"http://*.travian.com.au/*", 
-         	"http://*.travian.ba/*", 
-         	"http://*.travian.bg/*", 
-         	"http://*.travian.com.br/*", 
-         	"http://*.travian.cl/*", 
-         	"http://*.travian.cn/*", 
-         	"http://*.travian.cz/*", 
-         	"http://*.travian.de/*", 
-         	"http://*.travian.dk/*", 
-         	"http://*.travian.co.ee/*", 
-         	"http://*.travian.com.eg/*", 
-         	"http://*.travian.com/*", 
-         	"http://*.travian.net/*", 
-        	"http://*.travian.fi/*", 
-       		"http://*.travian.fr/*", 
-        	"http://*.travian.gr/*", 
-       	 	"http://*.travianteam.com/*", 
-         	"http://*.travian.hk/*", 
-         	"http://*.travian.com.hr/*", 
-         	"http://*.travian.hu/*", 
-         	"http://*.travian.co.id/*", 
-         	"http://*.travian.co.il/*", 
-         	"http://*.travian.in/*", 
-         	"http://*.travian.ir/*", 
-         	"http://*.travian.it/*", 
-         	"http://*.travian.jp/*", 
-         	"http://*.travian.kr/*", 
-         	"http://*.travian.lt/*", 
-         	"http://*.travian.lv/*", 
-         	"http://*.travian.ma/*", 
-         	"http://*.travian.my/*", 
-         	"http://*.travian.nl/*", 
-         	"http://*.travian.no/*", 
-         	"http://*.travian.ph/*", 
-        	"http://*.travian.pk/*", 
-         	"http://*.travian.pl/*", 
-         	"http://*.travian.pt/*", 
-         	"http://*.travian.ro/*", 
-         	"http://*.travian.rs/*", 
-         	"http://*.travian.ru/*", 
-         	"http://*.travian.sa/*", 
-         	"http://*.travian.se/*", 
-         	"http://*.travian.si/*", 
-         	"http://*.travian.sk/*", 
-         	"http://*.travian.sy/*", 
-         	"http://*.travian.th/*", 
-         	"http://*.travian.tr/*", 
-         	"http://*.travian.tw/*", 
-         	"http://*.travian.com.ua/*", 
-         	"http://*.travian.co.uk/*", 
-         	"http://*.travian.us/*", 
-         	"http://*.travian.com.vn/*", 
-         	"http://*.travian.co.za/*" 
-		]
-	} ]
+    "content_scripts": [ {
+        "run_at": "document_end",
+        "js": [ 
+            "Scripts/jQuery.js", 
+            "Scripts/jQueryUI.js",
+            "Scripts/ContentScript.js"
+        ],
+        "matches": [ 
+            "http://*.travian.ae/*", 
+            "http://*.travian.com.au/*", 
+            "http://*.travian.ba/*", 
+            "http://*.travian.bg/*", 
+            "http://*.travian.com.br/*", 
+            "http://*.travian.cl/*", 
+            "http://*.travian.cn/*", 
+            "http://*.travian.cz/*", 
+            "http://*.travian.de/*", 
+            "http://*.travian.dk/*", 
+            "http://*.travian.co.ee/*", 
+            "http://*.travian.com.eg/*", 
+            "http://*.travian.com/*", 
+            "http://*.travian.net/*", 
+            "http://*.travian.fi/*", 
+            "http://*.travian.fr/*", 
+            "http://*.travian.gr/*", 
+            "http://*.travianteam.com/*", 
+            "http://*.travian.hk/*", 
+            "http://*.travian.com.hr/*", 
+            "http://*.travian.hu/*", 
+            "http://*.travian.co.id/*", 
+            "http://*.travian.co.il/*", 
+            "http://*.travian.in/*", 
+            "http://*.travian.ir/*", 
+            "http://*.travian.it/*", 
+            "http://*.travian.jp/*", 
+            "http://*.travian.kr/*", 
+            "http://*.travian.lt/*", 
+            "http://*.travian.lv/*", 
+            "http://*.travian.ma/*", 
+            "http://*.travian.my/*", 
+            "http://*.travian.nl/*", 
+            "http://*.travian.no/*", 
+            "http://*.travian.ph/*", 
+            "http://*.travian.pk/*", 
+            "http://*.travian.pl/*", 
+            "http://*.travian.pt/*", 
+            "http://*.travian.ro/*", 
+            "http://*.travian.rs/*", 
+            "http://*.travian.ru/*", 
+            "http://*.travian.sa/*", 
+            "http://*.travian.se/*", 
+            "http://*.travian.si/*", 
+            "http://*.travian.sk/*", 
+            "http://*.travian.sy/*", 
+            "http://*.travian.th/*", 
+            "http://*.travian.tr/*", 
+            "http://*.travian.tw/*", 
+            "http://*.travian.com.ua/*", 
+            "http://*.travian.co.uk/*", 
+            "http://*.travian.us/*", 
+            "http://*.travian.com.vn/*", 
+            "http://*.travian.co.za/*" 
+        ]
+    } ]
 }
