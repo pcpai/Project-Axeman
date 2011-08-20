@@ -69,7 +69,8 @@
                 setupCheckboxButton("checkGlobalStorageOverflowTimeout");
 
                 // Build
-                setupCheckboxButton("checkBuildResourceNeeded");
+                setupCheckboxButton("checkBuildBuildingResourceDifference");
+                setupCheckboxButton("checkBuildUnitResourceDifference");
 
                 // Market
                 setupCheckboxButton("checkMarketShowX2Shortcut");
@@ -152,10 +153,18 @@
                 <table>
 
                     <tr>
-                        <td>Resource indicator&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                        <td>Buildings resource difference indicators&nbsp;&nbsp;&nbsp;&nbsp;</td>
                         <td>
-                            <input type="checkbox" id="checkBuildResourceNeeded" class="ui-helper-hidden-accessible">
-                            <label id="checkBuildResourceNeededLabel" for="checkBuildResourceNeeded" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button" aria-disabled="false" />
+                            <input type="checkbox" id="checkBuildBuildingResourceDifference" class="ui-helper-hidden-accessible">
+                            <label id="checkBuildBuildingResourceDifferenceLabel" for="checkBuildBuildingResourceDifference" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button" aria-disabled="false" />
+                        </td>						
+                    </tr>
+                    
+                    <tr>
+                        <td>Units resource difference indicators&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                        <td>
+                            <input type="checkbox" id="checkBuildUnitResourceDifference" class="ui-helper-hidden-accessible">
+                            <label id="checkBuildUnitResourceDifferenceLabel" for="checkBuildUnitResourceDifference" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button" aria-disabled="false" />
                         </td>						
                     </tr>
 

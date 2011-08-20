@@ -40,8 +40,8 @@
 
 */
 
-// TODO: 	Internationalization
-// 			http://code.google.com/chrome/extensions/i18n.html
+// TODO:    Internationalization
+//          http://code.google.com/chrome/extensions/i18n.html
 
 // TODO: Setting variables preloading
 // TODO: Refactor all functions to begin with small letter
@@ -50,7 +50,6 @@
 
 
 // Global constants
-var cBuildMarketFillInJunkResourceTimerInterval = 250;
 
 // Initialization of extension script (travian page modification)
 init();
@@ -189,7 +188,13 @@ function globalInitializeSettings() {
             }, function () { });
             chrome.extension.sendRequest({
                 category: "settings", 
-                name: "checkBuildResourceNeeded", 
+                name: "checkBuildBuildingResourceDifference", 
+                action: "set", 
+                value: "On"
+            }, function () { });
+            chrome.extension.sendRequest({
+                category: "settings", 
+                name: "checkBuildUnitResourceDifference", 
                 action: "set", 
                 value: "On"
             }, function () { });
@@ -261,7 +266,9 @@ function globalRemoveInGameHelp() {
 }
 
 /**
- * Informs about warehouse and grany overflow
+ * Informs about warehouse and granary overflow
+ * 
+ * @author Aleksandar Toplek
  */
 function globalOverflowTimer() {
     console.log("GlobalOverflowTimer - Initializing...");
@@ -317,14 +324,14 @@ function globalOverflowTimerFunction(index) {
         // Not updating if 00:00:00
         if (hours > 0) { 
             // Subtracts one second and writes new text to element
-            hours -= 0.0002778549597110; // 1 s -> 1/~3600 (3599 because of calculation error)
+            hours -= 0.0002777006777777; // 1 s -> 1/~3600 (3601 because of calculation error)
             $(this).text(_hoursToTime(hours));
-			
-            // Changes element style (color) depending on current time state
-            if (hours < 0.75) $(this).attr("style", "text-align: right; color:#B20C08;");
-            else if (hours < 2) $(this).attr("style", "text-align: right; color:#FFCC33;");
-            else $(this).attr("style", "text-align: right; color:black;");
         }
+        
+        // Changes element style (color) depending on current time state
+        if (hours < 0.75) $(this).attr("style", "text-align: right; color:#B20C08;");
+        else if (hours < 2) $(this).attr("style", "text-align: right; color:#FFCC33;");
+        else $(this).attr("style", "text-align: right; color:black;");
     });
 }
 
@@ -380,11 +387,20 @@ function globalInBuild() {
 	
     chrome.extension.sendRequest({
         category: "settings", 
-        name: "checkBuildResourceNeeded", 
+        name: "checkBuildBuildingResourceDifference", 
         action: "get"
     }, function (response) {
-        console.log("GlobalInBuild - checkBuildResourceNeeded [" + response + "]");
-        if (response === "On" | response == undefined) buildCalculateResourcesDifference();
+        console.log("GlobalInBuild - checkBuildBuildingResourceDifference [" + response + "]");
+        if (response === "On" | response == undefined) buildCalculateBuildingResourcesDifference();
+    });
+    
+    chrome.extension.sendRequest({
+        category: "settings", 
+        name: "checkBuildUnitResourceDifference", 
+        action: "get"
+    }, function (response) {
+        console.log("GlobalInBuild - checkBuildUnitResourceDifference [" + response + "]");
+        if (response === "On" | response == undefined) buildCalculateUnitResourcesDifference();
     });
 
     if ($(".gid17").length) buildMarketCalls();
@@ -418,27 +434,76 @@ function globalInSendTroops() {
  *
  * @author Aleksandar Toplek
  */
-function buildCalculateResourcesDifference() {
+function buildCalculateBuildingResourcesDifference() {
     // TODO: Seperate building cost and unit cost 
     // TODO: Unit cost should be difference between NUMBER units and storage
-    console.log("BuildCalculateResourcesDifference - Calculating resource differences...");
-	
-    for (var index = 0; index < 4; index++) {
-        var inWarehouse = globalGetWarehousAmount(index + 1);
-
-        $("span[class*='resources r" + (index + 1) + "']").each(function (i) {
+    console.log("buildCalculateBuildingResourcesDifference - Calculating building resource differences...");
+    
+    for (var rindex = 0; rindex < 4; rindex++) {
+        var inWarehouse = globalGetWarehousAmount(rindex + 1);
+        
+        // Building cost
+        $(".contractCosts > div > span[class*='resources r" + (rindex + 1) + "']").each(function() {
             var res = parseInt($(this).text());
             var diff = inWarehouse - res;
             var color = diff < 0 ? "#B20C08" : "#0C9E21";
             var div = "<div style='color:" + color + "'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(" + diff + ")</div>";
-			
+
             $(this).append(div);
-			
-            console.log("BuildCalculateResourcesDifference - r" + (index + 1) + " diff[" + diff + "]");
+
+            console.log("buildCalculateBuildingResourcesDifference - r" + (rindex + 1) + " diff[" + diff + "]");
+        });        
+    }
+    
+    console.log("buildCalculateBuildingResourcesDifference - Building resource differences calculated!");
+}
+
+/**
+ * Info about untit and storage resource difference
+ * 
+ * @author Aleksandar Toplek
+ */
+function buildCalculateUnitResourcesDifference() {
+    console.log("buildCalculateUnitResourcesDifference - Calculating unit resource difference...");
+    
+    var inputs = $("input[name*='t']");
+    var costs = $(".details > .showCosts");
+
+    for (var rindex = 0; rindex < 4; rindex++) {
+        inputs.each(function(iindex) {
+            $(costs[iindex]).children("span[class*='resources r" + (rindex + 1) + "']").append(
+                "<div id='paUnitCostDifferenceI" + iindex + "R" + rindex + "' style='color:#0C9E21'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(0)</div>");
         });
     }
-	
-    console.log("BuildCalculateResourcesDifference - Resource differences calculated!");
+    
+    setInterval(buildCalculateUnitResourcesDifferenceTimerFunction, 250, [inputs, costs]);
+    
+    console.log("buildCalculateUnitResourcesDifference - Timer registerd!");
+    
+    console.log("buildCalculateUnitResourcesDifference - Unit resource differences calculated!");
+}
+
+/**
+ * Called by buildCalculateUnitResourceDifference timer
+ * Function that actualy changes and calculates values
+ * 
+ * @author Aleksandar Toplek
+ * 
+ * @param {Array} args  Index 0 represents unit inputs
+ *                      Index 1 represents unit cost
+ */
+function buildCalculateUnitResourcesDifferenceTimerFunction(args) { 
+    for (var rindex = 0; rindex < 4; rindex++) {
+        var inWarehouse = globalGetWarehousAmount(rindex + 1);
+
+        args[0].each(function(iindex) {
+            var res = parseInt($(args[1][iindex]).children("span[class*='resources r" + (rindex + 1) + "']").text());
+            var diff = inWarehouse - (res * parseInt($(this).attr("value") || 0));
+            var color = diff < 0 ? "#B20C08" : "#0C9E21";
+            $("#paUnitCostDifferenceI" + iindex + "R" + rindex ).html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(" + diff + ")")
+            $("#paUnitCostDifferenceI" + iindex + "R" + rindex ).attr("style", "color:" + color);
+        });
+    }
 }
 
 /**
@@ -498,12 +563,12 @@ function buildMarketCalls() {
  * @author Aleksandar Toplek
  */
 function buildMarketRegisterTimerFillInJunkResource(args) {
-    window.setInterval(
-        BuildMarketFillInJunkResource,
-        CBuildMarketFillInJunkResourceTimerInterval,
+    setInterval(
+        buildMarketFillInJunkResource,
+        250,
         args);
 		
-    console.log("BuildMarketRegisterTimerFillInJunkResource - Timer set to interval [" + CBuildMarketFillInJunkResourceTimerInterval + "]")
+    console.log("BuildMarketRegisterTimerFillInJunkResource - Timer set to interval [250]");
 }
 
 // TODO: Comment function
