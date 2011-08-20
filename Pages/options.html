@@ -45,7 +45,7 @@
     <head>
 
         <link type="text/css" href="css/styles.css" rel="stylesheet" />
-        <script type="text/javascript" src="../Script/jQuery.js"></script>
+        <script type="text/javascript" src="../Scripts/jQuery.js"></script>
         <script type="text/javascript" src="../Scripts/jQueryUI.js"></script>
 
         <title>Project Axeman - Options</title>
@@ -54,34 +54,34 @@
 
             $(function () {
                 if (typeof (localStorage) == "undefined") {
-                    alert("Your browser does not support HTML5 localStorage. Try upgrading.");
+                    alert("Your browser does not support HTML5 localStorage. Try updating.");
                 }
                 else {
                     init();
                 }
             });
-
+            
             function init() {
                 $('#tabs').tabs();
 
                 // General
-                SetupCheckboxButton("checkGlobalRemoveInGameHelp");
-                SetupCheckboxButton("checkGlobalStorageOverflowTimeout");
+                setupCheckboxButton("checkGlobalRemoveInGameHelp");
+                setupCheckboxButton("checkGlobalStorageOverflowTimeout");
 
                 // Build
-                SetupCheckboxButton("checkBuildResourceNeeded");
+                setupCheckboxButton("checkBuildResourceNeeded");
 
                 // Market
-                SetupCheckboxButton("checkMarketShowX2Shortcut");
-                SetupCheckboxButton("checkMarketListMyVillages");
-                SetupCheckboxButton("checkMarketShowJunkResource");
-                SetupCheckboxButton("checkMarketShowSumIncomingResources");
+                setupCheckboxButton("checkMarketShowX2Shortcut");
+                setupCheckboxButton("checkMarketListMyVillages");
+                setupCheckboxButton("checkMarketShowJunkResource");
+                setupCheckboxButton("checkMarketShowSumIncomingResources");
 
                 // Send troops
-                SetupCheckboxButton("checkSendTroopsListMyVillages");
+                setupCheckboxButton("checkSendTroopsListMyVillages");
             }
 
-            function SetupCheckboxButton(name) {
+            function setupCheckboxButton(name) {
                 // TODO: Add try/catch block on saving
                 // try {
                 //     ...
