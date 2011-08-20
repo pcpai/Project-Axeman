@@ -200,24 +200,38 @@ function GlobalOverflowTimer() {
 			console.log("GlobalOverflowTimer - l" + (index + 1) + " appended!");
 			
 			$(this).append("<div style='background-color: #EFF5FD;'><b><p id='paResourceOverflowTime" + index + "' style='text-align: right;'>" + _hoursToTime(timeLeft) + "</p></b></div>");
-			
-			setInterval(function() {
-				$("#paResourceOverflowTime" + index).each(function(index) {
-					var hours = _timeToHours($(this).text());
-					hours += 0.0002778549597110; // 1 / ~3600 (3599 because of calculation error)
-					$(this).text(_hoursToTime(hours));
-					
-					if (hours < 2) $(this).attr("style", "text-align: right; background-color:#FFCC33;");
-					else if (hours < 0.75) (this).attr("style", "text-align: right; background-color:#B20C08;");
-					else (this).attr("style", "text-align: right;");
-				});	
-			}, 1000);
+						
+			setInterval(function() { GlobalOverflowTimerFunction(index); }, 1000);
 			
 			console.log("GlobalOverflowTimer - l" + (index + 1) + " timer registered!");
 		}
 	});
 	console.log("GlobalOverflowTimer - Finished!");
 };
+
+/**
+ * Called by GlobalOverflow timer
+ *
+ * @author Aleksandar Toplek
+ */
+function GlobalOverflowTimerFunction(index) {
+	$("#paResourceOverflowTime" + index).each(function(index) {
+		// Get current time from element
+		var hours = _timeToHours($(this).text());
+		
+		// Not updating if 00:00:00
+		if (hours > 0) { 
+			// Subtracts one second and writes new text to element
+			hours -= 0.0002778549597110; // 1 s -> 1/~3600 (3599 because of calculation error)
+			$(this).text(_hoursToTime(hours));
+			
+			// Changes element style (color) depending on current time state
+			if (hours < 0.75) $(this).attr("style", "text-align: right; color:#B20C08;");
+			else if (hours < 2) $(this).attr("style", "text-align: right; color:#FFCC33;");
+			else $(this).attr("style", "text-align: right; color:black;");
+		}
+	});
+}
 
 // TODO: Comment function
 function GlobalGetWarehousAmount(index) {
