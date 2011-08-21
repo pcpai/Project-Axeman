@@ -42,9 +42,7 @@
 
 // TODO:    Internationalization
 //          http://code.google.com/chrome/extensions/i18n.html
-
 // TODO: Setting variables preloading
-// TODO: Refactor all functions to begin with small letter
 
 // Global variables
 
@@ -435,8 +433,6 @@ function globalInSendTroops() {
  * @author Aleksandar Toplek
  */
 function buildCalculateBuildingResourcesDifference() {
-    // TODO: Seperate building cost and unit cost 
-    // TODO: Unit cost should be difference between NUMBER units and storage
     console.log("buildCalculateBuildingResourcesDifference - Calculating building resource differences...");
     
     for (var rindex = 0; rindex < 4; rindex++) {
@@ -571,50 +567,73 @@ function buildMarketRegisterTimerFillInJunkResource(args) {
     console.log("BuildMarketRegisterTimerFillInJunkResource - Timer set to interval [250]");
 }
 
-// TODO: Comment function
-// TODO: Log function
+/**
+ * Inserts JunkResource rows in the end of resource selection table
+ * 
+ * @author Aleksandar Toplek
+ */
 function buildMarketInsertJunkResourceTable() {
+    console.log("buildMarketInsertJunkResourceTable - Inserting Junk resources table...");
+    
     $(".send_res > tbody").append("<tr><td></td><td></td><td class='currentLoaded'>0 </td><td class='maxRes'>/ 0</td></tr><tr><td></td><td></td><td>Junk:</td><td class='junkAmount'>0 (0)</td></tr>");
+    
+    console.log("buildMarketInsertJunkResourceTable - Junk resources table inserted successfully...");
 }
 
-// TODO: Comment function
-// TODO: Log function
+/**
+ * Called by FillInJunkResource timer
+ * Actualy caltulates and fills values of pre-inserted table
+ * 
+ * @author Aleksandar Toplek
+ * 
+ * @param {Array} args  1 represents trader maximal transport amount
+ *                      0 represents how mush traders is available
+ */
 function buildMarketFillInJunkResource(args) {
-    // args
-    // 		- 1: traderMaxTransport
-    //		- 0: tradersAvailable
-
     var resMax = args[0] * args[1];
     var resSum = 0;
     var tradersNeeded = 0;
 
+    // Get input values
     var r1 = _getAttrNumber("#r1", "value");
     var r2 = _getAttrNumber("#r2", "value");
     var r3 = _getAttrNumber("#r3", "value");
     var r4 = _getAttrNumber("#r4", "value");
 
+    // Calulate sum of values
     resSum = r1 + r2 + r3 + r4;
 
+    // Calculates min number of traders needed for transport
     var tempRes = resSum;
     while (tempRes > 0) {
         tradersNeeded++;
         tempRes -= args[1];
     }
 
+    // Calculates junk amount
     var junkAmount = tradersNeeded * args[1] - resSum;
 
+    // Styles of row (indicating too much resource requested / more traders needed)
     if (tradersNeeded > args[0]) 
         $(".currentLoaded").attr("style", "color:red;");
     else $(".currentLoaded").attr("style", "");
 
+    // Changes value of pre-inserted rows
     $(".currentLoaded").html(resSum + " ");
     $(".maxRes").html("/ " + resMax);
     $(".junkAmount").html((tradersNeeded > args[0] ? "NA" : junkAmount) + " (" + tradersNeeded + ")");
 }
 
-// TODO: Comment function
-// TODO: Log function
+/**
+ * Looks for value of available traders
+ * 
+ * @author Aleksandar Toplek
+ * 
+ * @return {Number} Available traders or 0 if undefined
+ */
 function buildMarketGetTradersAvailable() {
+    console.log("buildMarketGetTradersAvailable - Started...");
+    
     var tradersSource = $("div[class*='traderCount'] > div:last").text();
 
     // NOTE: Regex code automated generator
@@ -625,55 +644,93 @@ function buildMarketGetTradersAvailable() {
 
     var p = new RegExp('(\\d+)', ["i"]);
     var result = p.exec(tradersSource);
+    
+    console.log("buildMarketGetTradersAvailable - Finished! Traders available [" + result[1] + "]");
 
     return parseInt(result[1]) || 0;
 }
 
-// TODO: Comment function
-// TODO: Log function
+/**
+ * Gets how mush one trader can transport
+ * 
+ * @author Aleksandar Toplek
+ * 
+ * @return {Number} Trader maximal resource transport or 0 if undefined
+ */
 function buildMarketGetTraderMaxTransport() {
-    return parseInt($(".send_res > tbody > tr:eq(0) > .max > a").text()) || 0;
-};
+    return parseInt($(".send_res > tbody > tr:eq(0) > .max > a").text() || 0);
+}
 
-// TODO: Comment function
-// TODO: Log function
+/**
+ * Replaces market village name text box with selection of players villages
+ * 
+ * @author Aleksandar Toplek
+ */
 function buildMarketFillVillagesList() {
+    console.log("buildMarketFillVillagesList - Started...");
+    
+    // Gets data
     var selectData = globalGetVillagesList();
     var selectInput = _selectB("EnterVillageName", "text village", "dname");
+    
+    console.log("buildMarketFillVillagesList - Generating selection...");
+    
     // TODO: Internationalization
+    // Generated select tag
     selectInput += _selectOption("(Please select village)");
     $.each(selectData, function (current, value) {
         selectInput += _selectOption(value.text);
     });
     selectInput += _selectE();
-	
+    
+    console.log("buildMarketFillVillagesList - Selection generated!;")
+    
+    // Replaces textbox with selectionbox (drop-down)
     $(".compactInput").html(selectInput);
+    
+    console.log("buildMarketFillVillagesList - Textbox successfully replaced!");
 }
 
-// TODO: Comment function
-// TODO: Log function
+/**
+ * Adds resource shortcuts (e.g. 1x, 2x traders maximal transport amount)
+ * 
+ * @author Aleksandar Toplek
+ * 
+ * @param {Number} traderMaxTransport Trader maximum resource transport amount
+ */
 function buildMarketAddTransportShortcuts(traderMaxTransport) {
+    console.log("buildMarketAddTransportShortcuts - Started...");
+    
     // SAMPLE: "<a href='#' onmouseup='add_res(1);' onclick='return false;'>1000</a>"
 
+    console.log("buildMarketAddTransportShortcuts - Adding 1x shortcut");
+    // 1x shortcut
     for (var index = 0; index < 4; index++) {
         var addCall = "add_res(" + (index + 1) + ");";
         var strX1 = "/ <a href='#' onmouseup='" + addCall + "' onclick='return false;'>" + traderMaxTransport + "</a><br>";
         $(".send_res > tbody > tr:eq(" + index + ") > .max").html(strX1);
     }
 
+    console.log("buildMarketAddTransportShortcuts - 1x shortcud added!");
+    console.log("buildMarketAddTransportShortcuts - Adding 2x shortcut");
+    // 2x shortcut
     chrome.extension.sendRequest({
         category: "settings", 
         name: "checkMarketShowX2Shortcut", 
         action: "get"
     }, function (response) {
+        console.log("buildMarketAddTransportShortcuts - checkMarketShowX2Shortcut [" + response + "]");
         if (response === "On" | response == undefined) {
             for (var index = 0; index < 4; index++) {
                 var addCall = "add_res(" + (index + 1) + ");";
                 var strX2 = "/ <a href='#' onmouseup='" + addCall + addCall + "' onclick='return false;'>" + traderMaxTransport * 2 + "</a><br>";
                 $(".send_res > tbody > tr:eq(" + index + ") > .max").append(strX2);
             }
+            console.log("buildMarketAddTransportShortcuts - 1x shortcud added!");
         }
     });
+    
+    console.log("buildMarketAddTransportShortcuts - Finished successfully!");
 }
 
 /**
@@ -756,19 +813,32 @@ function buildMarketIncomingSum() {
     console.log("BuildMarketIncomingSum - Finished successfully!");
 }
 
-// TODO: Comment function
-// TODO: Log function
+/**
+ * Replaces SendToops village name text box with selection of players villages
+ * 
+ * @author Aleksandar Toplek
+ */
 function sendTroopsFillVillagesList() {
+    csonsole.log("sendTroopsFillVillagesList - Started...");
+    
     var selectData = globalGetVillagesList();
     var selectInput = _selectB("enterVillageName", "text village", "dname");
+    
+    console.log("sendTroopsFillVillagesList - Generating selection...");
+    
     // TODO: Internationalization
     selectInput += _selectOption("(Please select city)");
     $.each(selectData, function(current, value) {
         selectInput += _selectOption(value.text);
     });
     selectInput += _selectE();
-	
+    
+    console.log("sendTroopsFillVillagesList - Selection generated!");
+    console.log("sendTroopsFillVillagesList - Appending table...");
+    
     $(".compactInput").html(selectInput);
+    
+    console.log("sendTroopsFillVillagesList - Finished successfully!");
 }
 
 /**
