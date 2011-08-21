@@ -1,0 +1,26 @@
+{
+    "ExtensionInfoDescription": {
+        "message": "Travian 4 ekstenzija koja dodaje 'nedostajeće' opcije u igru.",
+        "description": "Extension description"
+    },
+    
+    "TravianSelectVillage": {
+        "message": "(Odaberite selo)",
+        "description": "Koristi se na mjestima gdje je potrebno odabrati selo igraca"
+    },
+    
+    "TravianTotalIncoming": {
+        "message": "Ukupno dolazno",
+        "description": "Ukupno dolazeno tekst koji se koristi u tablici dolaznih resursi u trgovini"
+    },
+    
+    "TravianIncomingFrom": {
+        "message": "Dolazi iz",
+        "description": "Dolazi iz tekst koji se koristi u tablici dolaznih resursi u trgivini"
+    },
+    
+    "TravianVillagesLC": {
+        "message": "sela",
+        "description": "Riječ opće namjene za selo - malim slovima"
+    }
+}

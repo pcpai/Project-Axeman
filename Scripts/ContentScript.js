@@ -40,7 +40,6 @@
 
 */
 
-// TODO:    Internationalization
 //          http://code.google.com/chrome/extensions/i18n.html
 // TODO: Setting variables preloading
 
@@ -298,14 +297,12 @@ function globalOverflowTimer() {
             console.log("GlobalOverflowTimer - l" + (index + 1) + " appended!");
 			
             $(this).append("<div style='background-color: #EFF5FD;'><b><p id='paResourceOverflowTime" + index + "' style='text-align: right;'>" + _hoursToTime(timeLeft) + "</p></b></div>");
-						
-            setInterval(function() {
-                globalOverflowTimerFunction(index);
-            }, 1000);
-			
-            console.log("GlobalOverflowTimer - l" + (index + 1) + " timer registered!");
         }
     });
+    
+    setInterval(globalOverflowTimerFunction, 1000);
+    console.log("GlobalOverflowTimer - Timer registered!");
+            
     console.log("GlobalOverflowTimer - Finished!");
 }
 
@@ -314,23 +311,25 @@ function globalOverflowTimer() {
  *
  * @author Aleksandar Toplek
  */
-function globalOverflowTimerFunction(index) {
-    $("#paResourceOverflowTime" + index).each(function() {
-        // Get current time from element
-        var hours = _timeToHours($(this).text());
-		
-        // Not updating if 00:00:00
-        if (hours > 0) { 
-            // Subtracts one second and writes new text to element
-            hours -= 0.0002777006777777; // 1 s -> 1/~3600 (3601 because of calculation error)
-            $(this).text(_hoursToTime(hours));
-        }
-        
-        // Changes element style (color) depending on current time state
-        if (hours < 0.75) $(this).attr("style", "text-align: right; color:#B20C08;");
-        else if (hours < 2) $(this).attr("style", "text-align: right; color:#FFCC33;");
-        else $(this).attr("style", "text-align: right; color:black;");
-    });
+function globalOverflowTimerFunction() {
+    for (index = 0; index < 4; index++) {
+        $("#paResourceOverflowTime" + index).each(function() {
+            // Get current time from element
+            var hours = _timeToHours($(this).text());
+
+            // Not updating if 00:00:00
+            if (hours > 0) { 
+                // Subtracts one second and writes new text to element
+                hours -= 0.0002777006777777; // 1 s -> 1/~3600 (3601 because of calculation error)
+                $(this).text(_hoursToTime(hours));
+            }
+
+            // Changes element style (color) depending on current time state
+            if (hours < 0.75) $(this).attr("style", "text-align: right; color:#B20C08;");
+            else if (hours < 2) $(this).attr("style", "text-align: right; color:#FFCC33;");
+            else $(this).attr("style", "text-align: right; color:black;");
+        });
+    }
 }
 
 /**
@@ -439,7 +438,9 @@ function buildCalculateBuildingResourcesDifference() {
         var inWarehouse = globalGetWarehousAmount(rindex + 1);
         
         // Building cost
-        $(".contractCosts > div > span[class*='resources r" + (rindex + 1) + "']").each(function() {
+        // .costs are for town hall celebration
+        // .contractCosts are for building/upgreding building
+        $(".contractCosts > div > span[class*='resources r" + (rindex + 1) + "'],.costs > div > span[class*='resources r" + (rindex + 1) + "']").each(function() {
             var res = parseInt($(this).text());
             var diff = inWarehouse - res;
             var color = diff < 0 ? "#B20C08" : "#0C9E21";
@@ -675,9 +676,8 @@ function buildMarketFillVillagesList() {
     
     console.log("buildMarketFillVillagesList - Generating selection...");
     
-    // TODO: Internationalization
     // Generated select tag
-    selectInput += _selectOption("(Please select village)");
+    selectInput += _selectOption(_gim("TravianSelectVillage"));
     $.each(selectData, function (current, value) {
         selectInput += _selectOption(value.text);
     });
@@ -740,7 +740,7 @@ function buildMarketAddTransportShortcuts(traderMaxTransport) {
  */
 function buildMarketIncomingSum() {
     console.log("BuildMarketIncomingSum - Generating table...");
-    // FIXME: Time not scaned properly
+    // FIXME: Incoming not scaned properly
 	
     var sum 		= [0, 0, 0, 0];
     var count 		= 0;
@@ -780,10 +780,9 @@ function buildMarketIncomingSum() {
         var customTable = $(sourceTable.outerHTML());
 	
         // Head customization
-        // TODO: Internationalization
         customTable.children("thead").children().children().each(function(index) {
-            if (index === 0) $(this).html("Total incoming");
-            else $(this).html("Incoming from " + count + " villages");
+            if (index === 0) $(this).html(_gim("TravianTotalIncoming"));
+            else $(this).html(_gmi("TravianIncomingFrom") + " " + count + " " + _gim("TravianVillagesLC"));
         });
 		
         customTable.children("tbody:first").children().children("td").children(".in").children().attr("id", "paIncomingSumTimer");
@@ -826,8 +825,7 @@ function sendTroopsFillVillagesList() {
     
     console.log("sendTroopsFillVillagesList - Generating selection...");
     
-    // TODO: Internationalization
-    selectInput += _selectOption("(Please select city)");
+    selectInput += _selectOption(_gim("TravianSelectVillage"));
     $.each(selectData, function(current, value) {
         selectInput += _selectOption(value.text);
     });
@@ -972,4 +970,17 @@ function _selectOption (_value, _id, _selected) {
  */
 function _selectE () {
     return "</select>";
+}
+
+/**
+ * (Helper) Gets locale message
+ * 
+ * @author Aleksandar Toplek
+ * 
+ * @param {String} name Name of locale message
+ * 
+ * @return {String} Message from current locale language
+ */
+function _gim(name) {
+    return chrome.i18n.getMessage(name);
 }
