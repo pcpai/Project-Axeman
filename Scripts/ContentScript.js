@@ -40,7 +40,6 @@
 
 */
 
-//          http://code.google.com/chrome/extensions/i18n.html
 // TODO: Setting variables preloading
 
 // Global variables
