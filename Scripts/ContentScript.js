@@ -98,6 +98,8 @@ function pageGetPathname() {
  * This should be called after all information is retrieved from page.
  *
  * @author Aleksandar Toplek
+ * 
+ * @param {String} pathname Pathname of current page
  */
 function pageProcessAll(pathname) {
     console.log("PageProcessAll - Starting...");
@@ -111,8 +113,8 @@ function pageProcessAll(pathname) {
         name: "checkGlobalRemoveInGameHelp", 
         action: "get"
     }, function (response) {
-        console.log("PageProcessAll - checkGlobalRemoveInGameHelp [" + response + "]")
-        if (response === "On" | response == undefined) globalRemoveInGameHelp()
+        console.log("PageProcessAll - checkGlobalRemoveInGameHelp [" + response + "]");
+        if (response === "On" | response == undefined) globalRemoveInGameHelp();
     });
 
     chrome.extension.sendRequest({
@@ -120,7 +122,7 @@ function pageProcessAll(pathname) {
         name: "checkGlobalStorageOverflowTimeout", 
         action: "get"
     }, function (response) {
-        console.log("PageProcessAll - checkGlobalStorageOverflowTimeout [" + response + "]")
+        console.log("PageProcessAll - checkGlobalStorageOverflowTimeout [" + response + "]");
         if (response === "On" | response == undefined) globalOverflowTimer();
     });
 
@@ -159,7 +161,7 @@ function globalInitializeSettings() {
         name: "wasInitialized", 
         action: "get"
     }, function (response) {
-        console.log("GlobalInitializeSettings - wasInitialized [" + response +"]")
+        console.log("GlobalInitializeSettings - wasInitialized [" + response +"]");
         if (response == undefined) {
             console.log("GlobalInitializeSettings - First settings configuration...");
 			
@@ -311,7 +313,7 @@ function globalOverflowTimer() {
  * @author Aleksandar Toplek
  */
 function globalOverflowTimerFunction() {
-    for (index = 0; index < 4; index++) {
+    for (var index = 0; index < 4; index++) {
         $("#paResourceOverflowTime" + index).each(function() {
             // Get current time from element
             var hours = _timeToHours($(this).text());
@@ -417,7 +419,7 @@ function globalInSendTroops() {
         name: "checkSendTroopsListMyVillages", 
         action: "get"
     }, function (response) {
-        console.log("GlobalInSendTroops - checkSendTroopsListMyVillages [" + response + "]")
+        console.log("GlobalInSendTroops - checkSendTroopsListMyVillages [" + response + "]");
         if (response === "On" | response == undefined) SendTroopsFillVillagesList();
     });
 	
@@ -496,7 +498,7 @@ function buildCalculateUnitResourcesDifferenceTimerFunction(args) {
             var res = parseInt($(args[1][iindex]).children("span[class*='resources r" + (rindex + 1) + "']").text());
             var diff = inWarehouse - (res * parseInt($(this).attr("value") || 0));
             var color = diff < 0 ? "#B20C08" : "#0C9E21";
-            $("#paUnitCostDifferenceI" + iindex + "R" + rindex ).html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(" + diff + ")")
+            $("#paUnitCostDifferenceI" + iindex + "R" + rindex ).html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(" + diff + ")");
             $("#paUnitCostDifferenceI" + iindex + "R" + rindex ).attr("style", "color:" + color);
         });
     }
@@ -682,7 +684,7 @@ function buildMarketFillVillagesList() {
     });
     selectInput += _selectE();
     
-    console.log("buildMarketFillVillagesList - Selection generated!;")
+    console.log("buildMarketFillVillagesList - Selection generated!;");
     
     // Replaces textbox with selectionbox (drop-down)
     $(".compactInput").html(selectInput);
@@ -781,7 +783,7 @@ function buildMarketIncomingSum() {
         // Head customization
         customTable.children("thead").children().children().each(function(index) {
             if (index === 0) $(this).html(_gim("TravianTotalIncoming"));
-            else $(this).html(_gmi("TravianIncomingFrom") + " " + count + " " + _gim("TravianVillagesLC"));
+            else $(this).html(_gim("TravianIncomingFrom") + " " + count + " " + _gim("TravianVillagesLC"));
         });
 		
         customTable.children("tbody:first").children().children("td").children(".in").children().attr("id", "paIncomingSumTimer");
