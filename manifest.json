@@ -43,7 +43,7 @@
 {
     "name":             "Project Axeman",
     "description":      "__MSG_ExtensionInfoDescription__",
-    "version":          "0.1.6",
+    "version":          "0.1.7",
     
     "default_locale": "en",
     
