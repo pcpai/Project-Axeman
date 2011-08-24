@@ -317,7 +317,9 @@ function globalOverflowTimerFunction() {
         $("#paResourceOverflowTime" + index).each(function() {
             // Get current time from element
             var hours = _timeToHours($(this).text());
-
+            
+            //console.warn("l" + (index + 1) + "   " + $(this).text() + "    " + hours);
+            
             // Not updating if 00:00:00
             if (hours > 0) { 
                 // Subtracts one second and writes new text to element
@@ -344,7 +346,7 @@ function globalOverflowTimerFunction() {
  * @return {Number} 		Returns an amount of resource currently in storage 
  */
 function globalGetWarehousAmount(index) {
-    return parseInt(globalGetWarehousInfo(index).split("/")[0]);
+    return parseInt(globalGetWarehousInfo(index).split("/")[0], 10);
 }
 
 /**
@@ -358,7 +360,7 @@ function globalGetWarehousAmount(index) {
  * @return {Number} 		Returns maximum amount of resource that could be stored in storage 
  */
 function globalGetWarehousMax(index) {
-    return parseInt(globalGetWarehousInfo(index).split("/")[1]);
+    return parseInt(globalGetWarehousInfo(index).split("/")[1], 10);
 }
 
 /**
@@ -420,7 +422,7 @@ function globalInSendTroops() {
         action: "get"
     }, function (response) {
         console.log("GlobalInSendTroops - checkSendTroopsListMyVillages [" + response + "]");
-        if (response === "On" | response == undefined) SendTroopsFillVillagesList();
+        if (response === "On" | response == undefined) sendTroopsFillVillagesList();
     });
 	
     console.log("GlobalInSendTroops - In send troops finished successfully!");
@@ -442,7 +444,7 @@ function buildCalculateBuildingResourcesDifference() {
         // .costs are for town hall celebration
         // .contractCosts are for building/upgreding building
         $(".contractCosts > div > span[class*='resources r" + (rindex + 1) + "'],.costs > div > span[class*='resources r" + (rindex + 1) + "']").each(function() {
-            var res = parseInt($(this).text());
+            var res = parseInt($(this).text(), 10);
             var diff = inWarehouse - res;
             var color = diff < 0 ? "#B20C08" : "#0C9E21";
             var div = "<div style='color:" + color + "'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(" + diff + ")</div>";
@@ -495,8 +497,8 @@ function buildCalculateUnitResourcesDifferenceTimerFunction(args) {
         var inWarehouse = globalGetWarehousAmount(rindex + 1);
 
         args[0].each(function(iindex) {
-            var res = parseInt($(args[1][iindex]).children("span[class*='resources r" + (rindex + 1) + "']").text());
-            var diff = inWarehouse - (res * parseInt($(this).attr("value") || 0));
+            var res = parseInt($(args[1][iindex]).children("span[class*='resources r" + (rindex + 1) + "']").text(), 10);
+            var diff = inWarehouse - (res * parseInt($(this).attr("value") || 0, 10));
             var color = diff < 0 ? "#B20C08" : "#0C9E21";
             $("#paUnitCostDifferenceI" + iindex + "R" + rindex ).html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(" + diff + ")");
             $("#paUnitCostDifferenceI" + iindex + "R" + rindex ).attr("style", "color:" + color);
@@ -649,7 +651,7 @@ function buildMarketGetTradersAvailable() {
     
     console.log("buildMarketGetTradersAvailable - Finished! Traders available [" + result[1] + "]");
 
-    return parseInt(result[1]) || 0;
+    return parseInt(result[1], 10) || 0;
 }
 
 /**
@@ -660,7 +662,7 @@ function buildMarketGetTradersAvailable() {
  * @return {Number} Trader maximal resource transport or 0 if undefined
  */
 function buildMarketGetTraderMaxTransport() {
-    return parseInt($(".send_res > tbody > tr:eq(0) > .max > a").text() || 0);
+    return parseInt($(".send_res > tbody > tr:eq(0) > .max > a").text() || 0, 10);
 }
 
 /**
@@ -768,7 +770,7 @@ function buildMarketIncomingSum() {
             var resSplit 	= res.split(" ");
 			
             for (var i = 0; i < 4; ++i) {
-                sum[i] += parseInt(resSplit[i + 1]);
+                sum[i] += parseInt(resSplit[i + 1], 10);
             }
         }
     });
@@ -819,7 +821,7 @@ function buildMarketIncomingSum() {
  * @author Aleksandar Toplek
  */
 function sendTroopsFillVillagesList() {
-    csonsole.log("sendTroopsFillVillagesList - Started...");
+    console.log("sendTroopsFillVillagesList - Started...");
     
     var selectData = globalGetVillagesList();
     var selectInput = _selectB("enterVillageName", "text village", "dname");
@@ -853,7 +855,8 @@ function sendTroopsFillVillagesList() {
 function _timeToHours(time) {
     var split = time.split(":");
 	
-    var hours = parseInt(split[0]) + (parseInt(split[1]) / 60) + (parseInt(split[2]) / 3600);
+    var hours = parseInt(split[0], 10) + (parseInt(split[1], 10) / 60) + (parseInt(split[2], 10) / 3600);
+    //console.warn(time + "    {" + split + "} =>  " + hours + " split(0)" + parseInt(split[0], 10) + " split(1)" + parseInt(split[1], 10) + " split(2)" + parseInt(split[2], 10));
 	
     return hours;
 }
@@ -882,8 +885,8 @@ function _hoursToTime(hours) {
     hours -= _minutes;
     hours *= 60;
 	
-    var _seconds = hours;
-    _seconds = Math.floor(_seconds);
+    var _seconds = parseInt(hours, 10);
+    //_seconds = Math.floor(_seconds);
 	
     return 	(_hours < 10 ? '0' + _hours : _hours) + ":" + 
     (_minutes < 10 ? '0' + _minutes : _minutes) + ":" + 
@@ -918,7 +921,7 @@ function _getAttrNumber (_element, _attribute) {
  * @private 
  */
 function _toInt(value) {
-    var num = parseInt(value);
+    var num = parseInt(value, 10);
     return isNaN(num) ? 0 : num;
 }
 
