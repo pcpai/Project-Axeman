@@ -40,12 +40,27 @@
 
 */
 
-// TODO: Setting variables preloading
-
+//
 // Global variables
+//
+var dev = true;
+var settingsLoaded = 0;
+var settingsAvailable = 9;
+var startTime = 0;
+// Settings
+var checkGlobalRemoveInGameHelp;
+var checkGlobalStorageOverflowTimeout;
+var checkBuildBuildingResourceDifference;
+var checkBuildUnitResourceDifference;
+var checkMarketShowX2Shortcut;
+var checkMarketListMyVillages;
+var checkMarketShowJunkResource;
+var checkMarketShowSumIncomingResources;
+var checkSendTroopsListMyVillages;
 
-
+//
 // Global constants
+//
 
 // Initialization of extension script (travian page modification)
 init();
@@ -56,11 +71,25 @@ init();
  * @author Aleksandar Toplek
  */
 function init() {
-    console.log("Initialize - Initializing...");
-    var startTime = (new Date()).getTime();
+	if (dev) console.log("init - Initializing...");
+    startTime = (new Date()).getTime();
 	
+    if (dev) console.log("init - Waiting for settings (0/" + settingsAvailable + ")");
+    
+    pageLoadSettings();
+    
+    /*
+    var prevState = 0;
+    while(settingsLoaded != settingsAvailable) { 
+    	if (prevState != settingsLoaded) {
+    		prevState = settingsLoaded;
+    		if (dev) console.log("init - Waiting for settings (" + settingsLoaded + "/" + settingsAvailable + ")");
+    	}
+    }
+    */
+    
     // Initial settings configuration
-    globalInitializeSettings();
+    //globalInitializeSettings();
 	
     // Calls for PageAction show
     chrome.extension.sendRequest({
@@ -69,11 +98,65 @@ function init() {
         action: "set"
     }, function () { });
 	
+    //initPages();
+
+    //var endTime = (new Date()).getTime();
+    //if (dev) console.log("init - Finished successfully! (" + (endTime - startTime) + ")");
+}
+
+/**
+ * Requests for all settings to load
+ * 
+ * @author Aleksandar Toplek
+ */
+function pageLoadSettings() {
+	requestSetting("checkGlobalRemoveInGameHelp");
+	requestSetting("checkGlobalStorageOverflowTimeout");
+	requestSetting("checkBuildBuildingResourceDifference");
+	requestSetting("checkBuildUnitResourceDifference");
+	requestSetting("checkMarketShowX2Shortcut");
+	requestSetting("checkMarketListMyVillages");
+	requestSetting("checkMarketShowJunkResource");
+	requestSetting("checkMarketShowSumIncomingResources");
+	requestSetting("checkSendTroopsListMyVillages");
+}
+
+/**
+ * Gets setting and sets it to variable
+ * 
+ * @author Aleksandar Toplek
+ * 
+ * @param {String} _settingName Name of setting to retrieve
+ */
+function requestSetting(_settingName) {
+    chrome.extension.sendRequest({
+        category: "settings", 
+        name: _settingName, 
+        action: "get"//, 
+        //value: value
+    }, function (response) { 
+    	settingsLoaded++;
+    	console.warn(_settingName + "[" + response + "]");
+    	eval(_settingName + " = '" + response + "';");
+    	
+    	if (dev) console.log("init - Waiting for settings (" + settingsLoaded + "/" + settingsAvailable + ")");
+    	if (settingsLoaded === settingsAvailable) {
+    		initPages();
+    	}
+    });
+}
+
+/**
+ * Initializing page actions
+ * 
+ * @author Aleksandar Toplek
+ */
+function initPages() {
     var pathname = pageGetPathname();
-    pageProcessAll(pathname);
-	
+    pageProcessAll(pathname);	
+    
     var endTime = (new Date()).getTime();
-    console.log("Initialize - Finished successfully! (" + (endTime - startTime) + ")");
+    if (dev) console.log("init - Finished successfully! (" + (endTime - startTime) + ")");
 }
 
 /**
@@ -84,11 +167,11 @@ function init() {
  * @return {String} Returns an pathname of current web page without query.
  */
 function pageGetPathname() {
-    console.log("PageGetPathname - Reading current page...");
+    if (dev) console.log("PageGetPathname - Reading current page...");
 	
     var currentPath = window.location.pathname;
 	
-    console.log("PageGetPathname - Current page pathname [" + currentPath + "]");
+    if (dev) console.log("PageGetPathname - Current page pathname [" + currentPath + "]");
 	
     return currentPath;
 }
@@ -102,29 +185,17 @@ function pageGetPathname() {
  * @param {String} pathname Pathname of current page
  */
 function pageProcessAll(pathname) {
-    console.log("PageProcessAll - Starting...");
+    if (dev) console.log("PageProcessAll - Starting...");
 	
     var where = pageGetWhere(pathname);
 	
-    console.log("PageProcessAll - Pathname [" + pathname + "] mathched with [" + where + "]");
+    if (dev) console.log("PageProcessAll - Pathname [" + pathname + "] mathched with [" + where + "]");
 	
-    chrome.extension.sendRequest({
-        category: "settings", 
-        name: "checkGlobalRemoveInGameHelp", 
-        action: "get"
-    }, function (response) {
-        console.log("PageProcessAll - checkGlobalRemoveInGameHelp [" + response + "]");
-        if (response === "On" | response == undefined) globalRemoveInGameHelp();
-    });
+    if (checkGlobalRemoveInGameHelp === "On" | checkGlobalRemoveInGameHelp == undefined) 
+    	globalRemoveInGameHelp();
 
-    chrome.extension.sendRequest({
-        category: "settings", 
-        name: "checkGlobalStorageOverflowTimeout", 
-        action: "get"
-    }, function (response) {
-        console.log("PageProcessAll - checkGlobalStorageOverflowTimeout [" + response + "]");
-        if (response === "On" | response == undefined) globalOverflowTimer();
-    });
+    if (checkGlobalStorageOverflowTimeout === "On" | checkGlobalStorageOverflowTimeout == undefined) 
+    	globalOverflowTimer();
 
     if (where === "Build") globalInBuild();
     else if (where === "SendTroops") globalInSendTroops();
@@ -151,88 +222,6 @@ function pageGetWhere(pathname) {
 }
 
 /**
- * Initializes settings to default on first initialization.
- *
- * @author Aleksandar Toplek
- */
-function globalInitializeSettings() {
-    chrome.extension.sendRequest({
-        category: "settings", 
-        name: "wasInitialized", 
-        action: "get"
-    }, function (response) {
-        console.log("GlobalInitializeSettings - wasInitialized [" + response +"]");
-        if (response == undefined) {
-            console.log("GlobalInitializeSettings - First settings configuration...");
-			
-            chrome.extension.sendRequest({
-                category: "settings", 
-                name: "wasInitialized", 
-                action: "set", 
-                value: true
-            }, function () { });
-            // Check settings
-            chrome.extension.sendRequest({
-                category: "settings", 
-                name: "checkGlobalRemoveInGameHelp", 
-                action: "set", 
-                value: "On"
-            }, function () { });
-            chrome.extension.sendRequest({
-                category: "settings", 
-                name: "checkGlobalStorageOverflowTimeout", 
-                action: "set", 
-                value: "On"
-            }, function () { });
-            chrome.extension.sendRequest({
-                category: "settings", 
-                name: "checkBuildBuildingResourceDifference", 
-                action: "set", 
-                value: "On"
-            }, function () { });
-            chrome.extension.sendRequest({
-                category: "settings", 
-                name: "checkBuildUnitResourceDifference", 
-                action: "set", 
-                value: "On"
-            }, function () { });
-            chrome.extension.sendRequest({
-                category: "settings", 
-                name: "checkMarketShowX2Shortcut", 
-                action: "set", 
-                value: "On"
-            }, function () { });
-            chrome.extension.sendRequest({
-                category: "settings", 
-                name: "checkMarketListMyVillages", 
-                action: "set", 
-                value: "On"
-            }, function () { });
-            chrome.extension.sendRequest({
-                category: "settings", 
-                name: "checkMarketShowJunkResource", 
-                action: "set", 
-                value: "On"
-            }, function () { });
-            chrome.extension.sendRequest({
-                category: "settings", 
-                name: "checkMarketShowSumIncomingResources", 
-                action: "set", 
-                value: "On"
-            }, function () { });
-            chrome.extension.sendRequest({
-                category: "settings", 
-                name: "checkSendTroopsListMyVillages", 
-                action: "set", 
-                value: "On"
-            }, function () { });
-			
-            console.log("GlobalInitializeSettings - All settings initialized!");
-        }
-    });
-}
-
-/**
  * Filters all villages from right village list and only returns non active ones.
  *
  * @author Aleksandar Toplek
@@ -240,11 +229,11 @@ function globalInitializeSettings() {
  * @return {Array} Returns array of 'a' elemets with href to village view and name in text.
  */
 function globalGetVillagesList() {
-    console.log("GlobalGetVillagesList - Getting village list...");
+    if (dev) console.log("GlobalGetVillagesList - Getting village list...");
 	
     var villagesList = $("div[id='villageList'] > div[class='list'] > ul > li[class*='entry'] > a[class!='active']");
 	
-    console.log("GlobalGetVillagesList - Village list: " + villagesList);
+    if (dev) console.log("GlobalGetVillagesList - Village list: " + villagesList);
     return villagesList;
 }
 
@@ -256,11 +245,11 @@ function globalGetVillagesList() {
  * @author Aleksandar Toplek
  */
 function globalRemoveInGameHelp() {	
-    console.log("GlobalRemoveInGameHelp - Removing in game help...");
+    if (dev) console.log("GlobalRemoveInGameHelp - Removing in game help...");
 	
     $("#ingameManual").remove();
 	
-    console.log("GlobalRemoveInGameHelp - In game help removed!");
+    if (dev) console.log("GlobalRemoveInGameHelp - In game help removed!");
 }
 
 /**
@@ -269,7 +258,7 @@ function globalRemoveInGameHelp() {
  * @author Aleksandar Toplek
  */
 function globalOverflowTimer() {
-    console.log("GlobalOverflowTimer - Initializing...");
+    if (dev) console.log("GlobalOverflowTimer - Initializing...");
 	
     var perHour 	= [0, 0, 0, 0];
     var  scriptText = $("script:contains('resources.production')").text();
@@ -285,7 +274,7 @@ function globalOverflowTimer() {
         perHour[2] = m[3];
         perHour[3] = m[4];
 	
-        console.log("GlobalOverflowTimer - Resources per hour: " + perHour[0] + " " + perHour[1] + " " + perHour[2] + " " + perHour[3]);
+        if (dev) console.log("GlobalOverflowTimer - Resources per hour: " + perHour[0] + " " + perHour[1] + " " + perHour[2] + " " + perHour[3]);
     }
 	
     $("#res").children().each(function(index) {
@@ -295,16 +284,16 @@ function globalOverflowTimer() {
             var max 		= globalGetWarehousMax(index + 1);
             var timeLeft 	= (max - current) / perHour[index];
 	
-            console.log("GlobalOverflowTimer - l" + (index + 1) + " appended!");
+            if (dev) console.log("GlobalOverflowTimer - l" + (index + 1) + " appended!");
 			
             $(this).append("<div style='background-color: #EFF5FD;'><b><p id='paResourceOverflowTime" + index + "' style='text-align: right;'>" + _hoursToTime(timeLeft) + "</p></b></div>");
         }
     });
     
     setInterval(globalOverflowTimerFunction, 1000);
-    console.log("GlobalOverflowTimer - Timer registered!");
+    if (dev) console.log("GlobalOverflowTimer - Timer registered!");
             
-    console.log("GlobalOverflowTimer - Finished!");
+    if (dev) console.log("GlobalOverflowTimer - Finished!");
 }
 
 /**
@@ -383,29 +372,17 @@ function globalGetWarehousInfo(index) {
  * @author Aleksandar Toplek
  */
 function globalInBuild() {
-    console.log("GlobalInBuild - In buils calls...");
+    if (dev) console.log("GlobalInBuild - In buils calls...");
 	
-    chrome.extension.sendRequest({
-        category: "settings", 
-        name: "checkBuildBuildingResourceDifference", 
-        action: "get"
-    }, function (response) {
-        console.log("GlobalInBuild - checkBuildBuildingResourceDifference [" + response + "]");
-        if (response === "On" | response == undefined) buildCalculateBuildingResourcesDifference();
-    });
+    if (checkBuildBuildingResourceDifference === "On" | checkBuildBuildingResourceDifference == undefined) 
+    	buildCalculateBuildingResourcesDifference();
     
-    chrome.extension.sendRequest({
-        category: "settings", 
-        name: "checkBuildUnitResourceDifference", 
-        action: "get"
-    }, function (response) {
-        console.log("GlobalInBuild - checkBuildUnitResourceDifference [" + response + "]");
-        if (response === "On" | response == undefined) buildCalculateUnitResourcesDifference();
-    });
+    if (checkBuildUnitResourceDifference === "On" | checkBuildUnitResourceDifference == undefined) 
+    	buildCalculateUnitResourcesDifference();
 
     if ($(".gid17").length) buildMarketCalls();
 	
-    console.log("GlobalInBuild - In build finished successfully!");
+    if (dev) console.log("GlobalInBuild - In build finished successfully!");
 }
 
 /**
@@ -414,18 +391,12 @@ function globalInBuild() {
  * @author Aleksandar Toplek
  */
 function globalInSendTroops() {
-    console.log("GlobalInSendTroops - In send troops calls...");
+    if (dev) console.log("GlobalInSendTroops - In send troops calls...");
 	
-    chrome.extension.sendRequest({
-        category: "settings", 
-        name: "checkSendTroopsListMyVillages", 
-        action: "get"
-    }, function (response) {
-        console.log("GlobalInSendTroops - checkSendTroopsListMyVillages [" + response + "]");
-        if (response === "On" | response == undefined) sendTroopsFillVillagesList();
-    });
+    if (checkSendTroopsListMyVillages === "On" | checkSendTroopsListMyVillages == undefined) 
+    	sendTroopsFillVillagesList();
 	
-    console.log("GlobalInSendTroops - In send troops finished successfully!");
+    if (dev) console.log("GlobalInSendTroops - In send troops finished successfully!");
 }
 
 /**
@@ -435,7 +406,7 @@ function globalInSendTroops() {
  * @author Aleksandar Toplek
  */
 function buildCalculateBuildingResourcesDifference() {
-    console.log("buildCalculateBuildingResourcesDifference - Calculating building resource differences...");
+    if (dev) console.log("buildCalculateBuildingResourcesDifference - Calculating building resource differences...");
     
     for (var rindex = 0; rindex < 4; rindex++) {
         var inWarehouse = globalGetWarehousAmount(rindex + 1);
@@ -451,11 +422,11 @@ function buildCalculateBuildingResourcesDifference() {
 
             $(this).append(div);
 
-            console.log("buildCalculateBuildingResourcesDifference - r" + (rindex + 1) + " diff[" + diff + "]");
+            if (dev) console.log("buildCalculateBuildingResourcesDifference - r" + (rindex + 1) + " diff[" + diff + "]");
         });        
     }
     
-    console.log("buildCalculateBuildingResourcesDifference - Building resource differences calculated!");
+    if (dev) console.log("buildCalculateBuildingResourcesDifference - Building resource differences calculated!");
 }
 
 /**
@@ -464,7 +435,7 @@ function buildCalculateBuildingResourcesDifference() {
  * @author Aleksandar Toplek
  */
 function buildCalculateUnitResourcesDifference() {
-    console.log("buildCalculateUnitResourcesDifference - Calculating unit resource difference...");
+    if (dev) console.log("buildCalculateUnitResourcesDifference - Calculating unit resource difference...");
     
     var inputs = $("input[name*='t']");
     var costs = $(".details > .showCosts");
@@ -478,9 +449,9 @@ function buildCalculateUnitResourcesDifference() {
     
     setInterval(buildCalculateUnitResourcesDifferenceTimerFunction, 250, [inputs, costs]);
     
-    console.log("buildCalculateUnitResourcesDifference - Timer registerd!");
+    if (dev) console.log("buildCalculateUnitResourcesDifference - Timer registerd!");
     
-    console.log("buildCalculateUnitResourcesDifference - Unit resource differences calculated!");
+    if (dev) console.log("buildCalculateUnitResourcesDifference - Unit resource differences calculated!");
 }
 
 /**
@@ -512,7 +483,7 @@ function buildCalculateUnitResourcesDifferenceTimerFunction(args) {
  * @author Aleksandar Toplek
  */
 function buildMarketCalls() {
-    console.log("BuildMarketCalls - Marketplace calls...");
+    if (dev) console.log("BuildMarketCalls - Marketplace calls...");
 	
     var traderMaxTransport = buildMarketGetTraderMaxTransport();
     var tradersAvailable = buildMarketGetTradersAvailable();
@@ -520,41 +491,20 @@ function buildMarketCalls() {
     console.info("BuildMarketCalls - traderMaxTransport [" + traderMaxTransport + "]");
     console.info("BuildMarketCalls - tradersAvailable [" + tradersAvailable + "]");
 	
-    chrome.extension.sendRequest({
-        category: "settings", 
-        name: "checkMarketListMyVillages", 
-        action: "get"
-    }, function (response) {
-        console.log("BuildMarketCalls - checkMarketListMyVillages [" + response + "]");
-        if (response === "On" | response == undefined) buildMarketFillVillagesList();
-    });
+    if (checkMarketListMyVillages === "On" | checkMarketListMyVillages == undefined) 
+    	buildMarketFillVillagesList();
 
     buildMarketAddTransportShortcuts(traderMaxTransport);
 
-    chrome.extension.sendRequest({
-        category: "settings", 
-        name: "checkMarketShowJunkResource", 
-        action: "get"
-    }, function (response) {
-        console.log("BuildMarketCalls - checkMarketShowJunkResource [" + response + "]");
-        if (response === "On" | response == undefined) {
-            buildMarketInsertJunkResourceTable();
-            buildMarketRegisterTimerFillInJunkResource(
-                [tradersAvailable, traderMaxTransport]
-                );
-        }
-    });
+    if (checkMarketShowJunkResource === "On" | checkMarketShowJunkResource == undefined) {
+        buildMarketInsertJunkResourceTable();
+        buildMarketRegisterTimerFillInJunkResource([tradersAvailable, traderMaxTransport]);
+    }
 	
-    chrome.extension.sendRequest({
-        category: "settings", 
-        name: "checkMarketShowSumIncomingResources", 
-        action: "get"
-    }, function (response) {
-        console.log("BuildMarketCalls - checkMarketShowSumIncomingResources [" + response + "]");
-        if (response === "On" | response == undefined) buildMarketIncomingSum();
-    });
-	
-    console.log("BuildMarketCalls - Marketplace calls finished...");
+    if (checkMarketShowSumIncomingResources === "On" | checkMarketShowSumIncomingResources == undefined) 
+    	buildMarketIncomingSum();
+
+    if (dev) console.log("BuildMarketCalls - Marketplace calls finished...");
 }
 
 /**
@@ -568,7 +518,7 @@ function buildMarketRegisterTimerFillInJunkResource(args) {
         250,
         args);
 		
-    console.log("BuildMarketRegisterTimerFillInJunkResource - Timer set to interval [250]");
+    if (dev) console.log("BuildMarketRegisterTimerFillInJunkResource - Timer set to interval [250]");
 }
 
 /**
@@ -577,11 +527,11 @@ function buildMarketRegisterTimerFillInJunkResource(args) {
  * @author Aleksandar Toplek
  */
 function buildMarketInsertJunkResourceTable() {
-    console.log("buildMarketInsertJunkResourceTable - Inserting Junk resources table...");
+    if (dev) console.log("buildMarketInsertJunkResourceTable - Inserting Junk resources table...");
     
     $(".send_res > tbody").append("<tr><td></td><td></td><td class='currentLoaded'>0 </td><td class='maxRes'>/ 0</td></tr><tr><td></td><td></td><td>Junk:</td><td class='junkAmount'>0 (0)</td></tr>");
     
-    console.log("buildMarketInsertJunkResourceTable - Junk resources table inserted successfully...");
+    if (dev) console.log("buildMarketInsertJunkResourceTable - Junk resources table inserted successfully...");
 }
 
 /**
@@ -636,7 +586,7 @@ function buildMarketFillInJunkResource(args) {
  * @return {Number} Available traders or 0 if undefined
  */
 function buildMarketGetTradersAvailable() {
-    console.log("buildMarketGetTradersAvailable - Started...");
+    if (dev) console.log("buildMarketGetTradersAvailable - Started...");
     
     var tradersSource = $("div[class*='traderCount'] > div:last").text();
 
@@ -649,7 +599,7 @@ function buildMarketGetTradersAvailable() {
     var p = new RegExp('(\\d+)', ["i"]);
     var result = p.exec(tradersSource);
     
-    console.log("buildMarketGetTradersAvailable - Finished! Traders available [" + result[1] + "]");
+    if (dev) console.log("buildMarketGetTradersAvailable - Finished! Traders available [" + result[1] + "]");
 
     return parseInt(result[1], 10) || 0;
 }
@@ -671,13 +621,13 @@ function buildMarketGetTraderMaxTransport() {
  * @author Aleksandar Toplek
  */
 function buildMarketFillVillagesList() {
-    console.log("buildMarketFillVillagesList - Started...");
+    if (dev) console.log("buildMarketFillVillagesList - Started...");
     
     // Gets data
     var selectData = globalGetVillagesList();
     var selectInput = _selectB("EnterVillageName", "text village", "dname");
     
-    console.log("buildMarketFillVillagesList - Generating selection...");
+    if (dev) console.log("buildMarketFillVillagesList - Generating selection...");
     
     // Generated select tag
     selectInput += _selectOption(_gim("TravianSelectVillage"));
@@ -686,12 +636,12 @@ function buildMarketFillVillagesList() {
     });
     selectInput += _selectE();
     
-    console.log("buildMarketFillVillagesList - Selection generated!;");
+    if (dev) console.log("buildMarketFillVillagesList - Selection generated!;");
     
     // Replaces textbox with selectionbox (drop-down)
     $(".compactInput").html(selectInput);
     
-    console.log("buildMarketFillVillagesList - Textbox successfully replaced!");
+    if (dev) console.log("buildMarketFillVillagesList - Textbox successfully replaced!");
 }
 
 /**
@@ -702,11 +652,11 @@ function buildMarketFillVillagesList() {
  * @param {Number} traderMaxTransport Trader maximum resource transport amount
  */
 function buildMarketAddTransportShortcuts(traderMaxTransport) {
-    console.log("buildMarketAddTransportShortcuts - Started...");
+    if (dev) console.log("buildMarketAddTransportShortcuts - Started...");
     
     // SAMPLE: "<a href='#' onmouseup='add_res(1);' onclick='return false;'>1000</a>"
 
-    console.log("buildMarketAddTransportShortcuts - Adding 1x shortcut");
+    if (dev) console.log("buildMarketAddTransportShortcuts - Adding 1x shortcut");
     // 1x shortcut
     for (var index = 0; index < 4; index++) {
         var addCall = "add_res(" + (index + 1) + ");";
@@ -714,26 +664,19 @@ function buildMarketAddTransportShortcuts(traderMaxTransport) {
         $(".send_res > tbody > tr:eq(" + index + ") > .max").html(strX1);
     }
 
-    console.log("buildMarketAddTransportShortcuts - 1x shortcud added!");
-    console.log("buildMarketAddTransportShortcuts - Adding 2x shortcut");
+    if (dev) console.log("buildMarketAddTransportShortcuts - 1x shortcud added!");
+    if (dev) console.log("buildMarketAddTransportShortcuts - Adding 2x shortcut");
     // 2x shortcut
-    chrome.extension.sendRequest({
-        category: "settings", 
-        name: "checkMarketShowX2Shortcut", 
-        action: "get"
-    }, function (response) {
-        console.log("buildMarketAddTransportShortcuts - checkMarketShowX2Shortcut [" + response + "]");
-        if (response === "On" | response == undefined) {
-            for (var index = 0; index < 4; index++) {
-                var addCall = "add_res(" + (index + 1) + ");";
-                var strX2 = "/ <a href='#' onmouseup='" + addCall + addCall + "' onclick='return false;'>" + traderMaxTransport * 2 + "</a><br>";
-                $(".send_res > tbody > tr:eq(" + index + ") > .max").append(strX2);
-            }
-            console.log("buildMarketAddTransportShortcuts - 1x shortcud added!");
+    if (checkMarketShowX2Shortcut === "On" | checkMarketShowX2Shortcut == undefined) {
+        for (var index = 0; index < 4; index++) {
+            var addCall = "add_res(" + (index + 1) + ");";
+            var strX2 = "/ <a href='#' onmouseup='" + addCall + addCall + "' onclick='return false;'>" + traderMaxTransport * 2 + "</a><br>";
+            $(".send_res > tbody > tr:eq(" + index + ") > .max").append(strX2);
         }
-    });
+        if (dev) console.log("buildMarketAddTransportShortcuts - 1x shortcud added!");
+    }
     
-    console.log("buildMarketAddTransportShortcuts - Finished successfully!");
+    if (dev) console.log("buildMarketAddTransportShortcuts - Finished successfully!");
 }
 
 /**
@@ -742,7 +685,7 @@ function buildMarketAddTransportShortcuts(traderMaxTransport) {
  * @author Aleksandar Toplek
  */
 function buildMarketIncomingSum() {
-    console.log("BuildMarketIncomingSum - Generating table...");
+    if (dev) console.log("BuildMarketIncomingSum - Generating table...");
     // FIXME: Incoming not scaned properly
 	
     var sum 		= [0, 0, 0, 0];
@@ -798,12 +741,12 @@ function buildMarketIncomingSum() {
             "<img class='r4' src='img/x.gif' alt='crop'> " + sum[3] + "&nbsp;&nbsp;"
             );
 		
-        console.log("BuildMarketIncomingSum - Table generated! Appending table to beginning...");
+        if (dev) console.log("BuildMarketIncomingSum - Table generated! Appending table to beginning...");
 		
         // Appends custom table to beginning
         $(".traders:first").before(customTable.outerHTML());
 		
-        console.log("BuildMarketIncomingSum - Table appended successfully! Asigning timer...");
+        if (dev) console.log("BuildMarketIncomingSum - Table appended successfully! Asigning timer...");
 		
         // Updates incoming left time every 100 ms to original table value
         setInterval(function() {
@@ -812,7 +755,7 @@ function buildMarketIncomingSum() {
         }, 100);
     }
 	
-    console.log("BuildMarketIncomingSum - Finished successfully!");
+    if (dev) console.log("BuildMarketIncomingSum - Finished successfully!");
 }
 
 /**
@@ -821,12 +764,12 @@ function buildMarketIncomingSum() {
  * @author Aleksandar Toplek
  */
 function sendTroopsFillVillagesList() {
-    console.log("sendTroopsFillVillagesList - Started...");
+    if (dev) console.log("sendTroopsFillVillagesList - Started...");
     
     var selectData = globalGetVillagesList();
     var selectInput = _selectB("enterVillageName", "text village", "dname");
     
-    console.log("sendTroopsFillVillagesList - Generating selection...");
+    if (dev) console.log("sendTroopsFillVillagesList - Generating selection...");
     
     selectInput += _selectOption(_gim("TravianSelectVillage"));
     $.each(selectData, function(current, value) {
@@ -834,12 +777,12 @@ function sendTroopsFillVillagesList() {
     });
     selectInput += _selectE();
     
-    console.log("sendTroopsFillVillagesList - Selection generated!");
-    console.log("sendTroopsFillVillagesList - Appending table...");
+    if (dev) console.log("sendTroopsFillVillagesList - Selection generated!");
+    if (dev) console.log("sendTroopsFillVillagesList - Appending table...");
     
     $(".compactInput").html(selectInput);
     
-    console.log("sendTroopsFillVillagesList - Finished successfully!");
+    if (dev) console.log("sendTroopsFillVillagesList - Finished successfully!");
 }
 
 /**
