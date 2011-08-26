@@ -43,10 +43,14 @@
 //
 // Global variables
 //
+// Debugging variables
 var dev = true;
+var dbgtmrs = false;
+// Other variables
 var settingsLoaded = 0;
-var settingsAvailable = 9;
+var settingsAvailable = 10;
 var startTime = 0;
+var timerStep = 128;
 // Settings
 var checkGlobalRemoveInGameHelp;
 var checkGlobalStorageOverflowTimeout;
@@ -57,6 +61,7 @@ var checkMarketListMyVillages;
 var checkMarketShowJunkResource;
 var checkMarketShowSumIncomingResources;
 var checkSendTroopsListMyVillages;
+var checkReportShowCheckAll;
 
 //
 // Global constants
@@ -76,20 +81,8 @@ function init() {
 	
     if (dev) console.log("init - Waiting for settings (0/" + settingsAvailable + ")");
     
+    // Begins to load settings
     pageLoadSettings();
-    
-    /*
-    var prevState = 0;
-    while(settingsLoaded != settingsAvailable) { 
-    	if (prevState != settingsLoaded) {
-    		prevState = settingsLoaded;
-    		if (dev) console.log("init - Waiting for settings (" + settingsLoaded + "/" + settingsAvailable + ")");
-    	}
-    }
-    */
-    
-    // Initial settings configuration
-    //globalInitializeSettings();
 	
     // Calls for PageAction show
     chrome.extension.sendRequest({
@@ -97,11 +90,6 @@ function init() {
         name: "showActionPageMenu", 
         action: "set"
     }, function () { });
-	
-    //initPages();
-
-    //var endTime = (new Date()).getTime();
-    //if (dev) console.log("init - Finished successfully! (" + (endTime - startTime) + ")");
 }
 
 /**
@@ -110,6 +98,10 @@ function init() {
  * @author Aleksandar Toplek
  */
 function pageLoadSettings() {
+	if (dev) console.log("pageLoadSettings - dev[" + dev + "]");
+	if (dev) console.log("pageLoadSettings - dbgtmrs[" + dbgtmrs + "]");
+	if (dev) console.log("pageLoadSettings - [" + settingsAvailable + "] settings available");
+	
 	requestSetting("checkGlobalRemoveInGameHelp");
 	requestSetting("checkGlobalStorageOverflowTimeout");
 	requestSetting("checkBuildBuildingResourceDifference");
@@ -119,6 +111,7 @@ function pageLoadSettings() {
 	requestSetting("checkMarketShowJunkResource");
 	requestSetting("checkMarketShowSumIncomingResources");
 	requestSetting("checkSendTroopsListMyVillages");
+	requestSetting("checkReportShowCheckAll");
 }
 
 /**
@@ -136,10 +129,10 @@ function requestSetting(_settingName) {
         //value: value
     }, function (response) { 
     	settingsLoaded++;
-    	console.warn(_settingName + "[" + response + "]");
+    	//console.warn(_settingName + "[" + response + "]");
     	eval(_settingName + " = '" + response + "';");
     	
-    	if (dev) console.log("init - Waiting for settings (" + settingsLoaded + "/" + settingsAvailable + ")");
+    	if (dev) console.log("requestSetting - Waiting for settings (" + settingsLoaded + "/" + settingsAvailable + ")");
     	if (settingsLoaded === settingsAvailable) {
     		initPages();
     	}
@@ -148,15 +141,16 @@ function requestSetting(_settingName) {
 
 /**
  * Initializing page actions
+ * Last used function
  * 
  * @author Aleksandar Toplek
  */
 function initPages() {
-    var pathname = pageGetPathname();
-    pageProcessAll(pathname);	
+    var info = pageGetInfo();
+    pageProcessAll(info);	
     
     var endTime = (new Date()).getTime();
-    if (dev) console.log("init - Finished successfully! (" + (endTime - startTime) + ")");
+    if (dev) console.log("initPages - Finished successfully! (" + (endTime - startTime) + ")");
 }
 
 /**
@@ -164,16 +158,21 @@ function initPages() {
  *
  * @author Aleksandar Toplek
  *
- * @return {String} Returns an pathname of current web page without query.
+ * @return {Object} Returns an object with 'pathname' and 'search' properties.
  */
-function pageGetPathname() {
-    if (dev) console.log("PageGetPathname - Reading current page...");
+function pageGetInfo() {
+    if (dev) console.log("pageGetPathname - Reading current page...");
 	
     var currentPath = window.location.pathname;
+    var currentSeach = window.location.search;
+    
+    if (dev) console.log("pageGetInfo - Current page pathname [" + currentPath + "]");
+    if (dev) console.log("pageGetInfo - Current page search [" + currentSeach + "]");
 	
-    if (dev) console.log("PageGetPathname - Current page pathname [" + currentPath + "]");
-	
-    return currentPath;
+    return {
+    	pathname: currentPath,
+    	search: currentSeach
+    };
 }
 
 /**
@@ -182,23 +181,24 @@ function pageGetPathname() {
  *
  * @author Aleksandar Toplek
  * 
- * @param {String} pathname Pathname of current page
+ * @param {String} info Info of current page
  */
-function pageProcessAll(pathname) {
-    if (dev) console.log("PageProcessAll - Starting...");
+function pageProcessAll(info) {
+    if (dev) console.log("pageProcessAll - Starting...");
 	
-    var where = pageGetWhere(pathname);
+    var where = pageGetWhere(info.pathname);
 	
-    if (dev) console.log("PageProcessAll - Pathname [" + pathname + "] mathched with [" + where + "]");
-	
-    if (checkGlobalRemoveInGameHelp === "On" | checkGlobalRemoveInGameHelp == undefined) 
+    if (dev) console.log("pageProcessAll - Pathname [" + info.pathname + "] mathched with [" + where + "]");
+
+    if (checkGlobalRemoveInGameHelp === "On" | checkGlobalRemoveInGameHelp === "null") 
     	globalRemoveInGameHelp();
 
-    if (checkGlobalStorageOverflowTimeout === "On" | checkGlobalStorageOverflowTimeout == undefined) 
+    if (checkGlobalStorageOverflowTimeout === "On" | checkGlobalStorageOverflowTimeout === "null") 
     	globalOverflowTimer();
 
     if (where === "Build") globalInBuild();
     else if (where === "SendTroops") globalInSendTroops();
+    else if (where === "Reports") globalInReports(info.search);
     else return;
 }
 
@@ -211,12 +211,13 @@ function pageProcessAll(pathname) {
  *					(e.g. Map, SendTroops, VillageIn, ...)
  */
 function pageGetWhere(pathname) {
-    if      (pathname.match(/dorf1.php/gi)) return "VillageOut";
-    else if (pathname.match(/dorf2.php/gi)) return "VillageIn";
-    else if (pathname.match(/dorf3.php/gi)) return "VillageOverview";
-    else if (pathname.match(/build.php/i))  return "Build";
-    else if (pathname.match(/karte.php/gi)) return "Map";
-    else if (pathname.match(/a2b.php/gi))   return "SendTroops";
+    if      (pathname.match(/dorf1.php/gi)) 	return "VillageOut";
+    else if (pathname.match(/dorf2.php/gi)) 	return "VillageIn";
+    else if (pathname.match(/dorf3.php/gi)) 	return "VillageOverview";
+    else if (pathname.match(/build.php/i))  	return "Build";
+    else if (pathname.match(/karte.php/gi)) 	return "Map";
+    else if (pathname.match(/a2b.php/gi))   	return "SendTroops";
+    else if (pathname.match(/berichte.php/gi)) 	return "Reports";
 
     return undefined;
 }
@@ -229,11 +230,11 @@ function pageGetWhere(pathname) {
  * @return {Array} Returns array of 'a' elemets with href to village view and name in text.
  */
 function globalGetVillagesList() {
-    if (dev) console.log("GlobalGetVillagesList - Getting village list...");
+    if (dev) console.log("globalGetVillagesList - Getting village list...");
 	
     var villagesList = $("div[id='villageList'] > div[class='list'] > ul > li[class*='entry'] > a[class!='active']");
 	
-    if (dev) console.log("GlobalGetVillagesList - Village list: " + villagesList);
+    if (dev) console.log("globalGetVillagesList - Village list: " + villagesList);
     return villagesList;
 }
 
@@ -245,11 +246,11 @@ function globalGetVillagesList() {
  * @author Aleksandar Toplek
  */
 function globalRemoveInGameHelp() {	
-    if (dev) console.log("GlobalRemoveInGameHelp - Removing in game help...");
+    if (dev) console.log("globalRemoveInGameHelp - Removing in game help...");
 	
     $("#ingameManual").remove();
 	
-    if (dev) console.log("GlobalRemoveInGameHelp - In game help removed!");
+    if (dev) console.log("globalRemoveInGameHelp - In game help removed!");
 }
 
 /**
@@ -258,7 +259,7 @@ function globalRemoveInGameHelp() {
  * @author Aleksandar Toplek
  */
 function globalOverflowTimer() {
-    if (dev) console.log("GlobalOverflowTimer - Initializing...");
+    if (dev) console.log("globalOverflowTimer - Initializing...");
 	
     var perHour 	= [0, 0, 0, 0];
     var  scriptText = $("script:contains('resources.production')").text();
@@ -274,7 +275,7 @@ function globalOverflowTimer() {
         perHour[2] = m[3];
         perHour[3] = m[4];
 	
-        if (dev) console.log("GlobalOverflowTimer - Resources per hour: " + perHour[0] + " " + perHour[1] + " " + perHour[2] + " " + perHour[3]);
+        if (dev) console.log("globalOverflowTimer - Resources per hour: " + perHour[0] + " " + perHour[1] + " " + perHour[2] + " " + perHour[3]);
     }
 	
     $("#res").children().each(function(index) {
@@ -284,16 +285,16 @@ function globalOverflowTimer() {
             var max 		= globalGetWarehousMax(index + 1);
             var timeLeft 	= (max - current) / perHour[index];
 	
-            if (dev) console.log("GlobalOverflowTimer - l" + (index + 1) + " appended!");
+            if (dev) console.log("globalOverflowTimer - l" + (index + 1) + " appended!");
 			
             $(this).append("<div style='background-color: #EFF5FD;'><b><p id='paResourceOverflowTime" + index + "' style='text-align: right;'>" + _hoursToTime(timeLeft) + "</p></b></div>");
         }
     });
     
     setInterval(globalOverflowTimerFunction, 1000);
-    if (dev) console.log("GlobalOverflowTimer - Timer registered!");
+    if (dev) console.log("globalOverflowTimer - Timer registered!");
             
-    if (dev) console.log("GlobalOverflowTimer - Finished!");
+    if (dev) console.log("globalOverflowTimer - Finished!");
 }
 
 /**
@@ -307,7 +308,7 @@ function globalOverflowTimerFunction() {
             // Get current time from element
             var hours = _timeToHours($(this).text());
             
-            //console.warn("l" + (index + 1) + "   " + $(this).text() + "    " + hours);
+            if (dbgtmrs) console.log("globalOverflowTimerFunction - l" + (index + 1) + "   " + $(this).text() + "    " + hours);
             
             // Not updating if 00:00:00
             if (hours > 0) { 
@@ -372,17 +373,17 @@ function globalGetWarehousInfo(index) {
  * @author Aleksandar Toplek
  */
 function globalInBuild() {
-    if (dev) console.log("GlobalInBuild - In buils calls...");
+    if (dev) console.log("globalInBuild() - In buils calls...");
 	
-    if (checkBuildBuildingResourceDifference === "On" | checkBuildBuildingResourceDifference == undefined) 
+    if (checkBuildBuildingResourceDifference === "On" | checkBuildBuildingResourceDifference === "null") 
     	buildCalculateBuildingResourcesDifference();
     
-    if (checkBuildUnitResourceDifference === "On" | checkBuildUnitResourceDifference == undefined) 
+    if (checkBuildUnitResourceDifference === "On" | checkBuildUnitResourceDifference === "null") 
     	buildCalculateUnitResourcesDifference();
 
     if ($(".gid17").length) buildMarketCalls();
 	
-    if (dev) console.log("GlobalInBuild - In build finished successfully!");
+    if (dev) console.log("globalInBuild() - In build finished successfully!");
 }
 
 /**
@@ -391,12 +392,37 @@ function globalInBuild() {
  * @author Aleksandar Toplek
  */
 function globalInSendTroops() {
-    if (dev) console.log("GlobalInSendTroops - In send troops calls...");
+    if (dev) console.log("globalInSendTroops - In send troops calls...");
 	
-    if (checkSendTroopsListMyVillages === "On" | checkSendTroopsListMyVillages == undefined) 
+    if (checkSendTroopsListMyVillages === "On" | checkSendTroopsListMyVillages === "null") 
     	sendTroopsFillVillagesList();
 	
-    if (dev) console.log("GlobalInSendTroops - In send troops finished successfully!");
+    if (dev) console.log("globalInSendTroops - In send troops finished successfully!");
+}
+
+/**
+ * Calls all Reports related functions
+ * 
+ * @author Aleksandar Toplek
+ * 
+ * @param {String} search Search/Query of current page
+ */
+function globalInReports(search) {
+	if (dev) console.log("globalInReports - In reports calls...");
+	
+	if (search === "") {
+		if (dev) console.log("globalInReports - Reports");
+		
+		if (checkReportShowCheckAll === "On" | checkReportShowCheckAll === "null") 
+			reportsShowCheckAll();
+	}
+	else {
+		if (dev) console.log("globalInReports - Report view");
+		
+		// No current use
+	}
+	
+	if (dev) console.log("globalInReports - In reports finished successfully!");
 }
 
 /**
@@ -447,7 +473,7 @@ function buildCalculateUnitResourcesDifference() {
         });
     }
     
-    setInterval(buildCalculateUnitResourcesDifferenceTimerFunction, 250, [inputs, costs]);
+    setInterval(buildCalculateUnitResourcesDifferenceTimerFunction, timerStep, [inputs, costs]);
     
     if (dev) console.log("buildCalculateUnitResourcesDifference - Timer registerd!");
     
@@ -473,6 +499,8 @@ function buildCalculateUnitResourcesDifferenceTimerFunction(args) {
             var color = diff < 0 ? "#B20C08" : "#0C9E21";
             $("#paUnitCostDifferenceI" + iindex + "R" + rindex ).html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(" + diff + ")");
             $("#paUnitCostDifferenceI" + iindex + "R" + rindex ).attr("style", "color:" + color);
+            
+            if (dbgtmrs) console.log("buildCalculateUnitResourcesDifferenceTimerFunction - diff [" + diff + "]");
         });
     }
 }
@@ -483,28 +511,28 @@ function buildCalculateUnitResourcesDifferenceTimerFunction(args) {
  * @author Aleksandar Toplek
  */
 function buildMarketCalls() {
-    if (dev) console.log("BuildMarketCalls - Marketplace calls...");
+    if (dev) console.log("buildMarketCalls - Marketplace calls...");
 	
     var traderMaxTransport = buildMarketGetTraderMaxTransport();
     var tradersAvailable = buildMarketGetTradersAvailable();
 	
-    console.info("BuildMarketCalls - traderMaxTransport [" + traderMaxTransport + "]");
-    console.info("BuildMarketCalls - tradersAvailable [" + tradersAvailable + "]");
+    console.info("buildMarketCalls - traderMaxTransport [" + traderMaxTransport + "]");
+    console.info("buildMarketCalls - tradersAvailable [" + tradersAvailable + "]");
 	
-    if (checkMarketListMyVillages === "On" | checkMarketListMyVillages == undefined) 
+    if (checkMarketListMyVillages === "On" | checkMarketListMyVillages === "null") 
     	buildMarketFillVillagesList();
 
     buildMarketAddTransportShortcuts(traderMaxTransport);
 
-    if (checkMarketShowJunkResource === "On" | checkMarketShowJunkResource == undefined) {
+    if (checkMarketShowJunkResource === "On" | checkMarketShowJunkResource === "null") {
         buildMarketInsertJunkResourceTable();
         buildMarketRegisterTimerFillInJunkResource([tradersAvailable, traderMaxTransport]);
     }
 	
-    if (checkMarketShowSumIncomingResources === "On" | checkMarketShowSumIncomingResources == undefined) 
+    if (checkMarketShowSumIncomingResources === "On" | checkMarketShowSumIncomingResources === "null") 
     	buildMarketIncomingSum();
 
-    if (dev) console.log("BuildMarketCalls - Marketplace calls finished...");
+    if (dev) console.log("buildMarketCalls - Marketplace calls finished...");
 }
 
 /**
@@ -513,12 +541,9 @@ function buildMarketCalls() {
  * @author Aleksandar Toplek
  */
 function buildMarketRegisterTimerFillInJunkResource(args) {
-    setInterval(
-        buildMarketFillInJunkResource,
-        250,
-        args);
+    setInterval(buildMarketFillInJunkResourceTimer, timerStep, args);
 		
-    if (dev) console.log("BuildMarketRegisterTimerFillInJunkResource - Timer set to interval [250]");
+    if (dev) console.log("buildMarketRegisterTimerFillInJunkResource - Timer set to interval [250]");
 }
 
 /**
@@ -541,9 +566,9 @@ function buildMarketInsertJunkResourceTable() {
  * @author Aleksandar Toplek
  * 
  * @param {Array} args  1 represents trader maximal transport amount
- *                      0 represents how mush traders is available
+ *                      0 represents how much traders is available
  */
-function buildMarketFillInJunkResource(args) {
+function buildMarketFillInJunkResourceTimer(args) {
     var resMax = args[0] * args[1];
     var resSum = 0;
     var tradersNeeded = 0;
@@ -576,6 +601,8 @@ function buildMarketFillInJunkResource(args) {
     $(".currentLoaded").html(resSum + " ");
     $(".maxRes").html("/ " + resMax);
     $(".junkAmount").html((tradersNeeded > args[0] ? "NA" : junkAmount) + " (" + tradersNeeded + ")");
+    
+    if (dbgtmrs) console.log("buildMarketFillInJunkResourceTimer - traders [" + args[0] + "] each [" + args[1] + "] sending [" + resSum + "] with junk [" + junkAmount + "]");
 }
 
 /**
@@ -667,7 +694,7 @@ function buildMarketAddTransportShortcuts(traderMaxTransport) {
     if (dev) console.log("buildMarketAddTransportShortcuts - 1x shortcud added!");
     if (dev) console.log("buildMarketAddTransportShortcuts - Adding 2x shortcut");
     // 2x shortcut
-    if (checkMarketShowX2Shortcut === "On" | checkMarketShowX2Shortcut == undefined) {
+    if (checkMarketShowX2Shortcut === "On" | checkMarketShowX2Shortcut === "null") {
         for (var index = 0; index < 4; index++) {
             var addCall = "add_res(" + (index + 1) + ");";
             var strX2 = "/ <a href='#' onmouseup='" + addCall + addCall + "' onclick='return false;'>" + traderMaxTransport * 2 + "</a><br>";
@@ -685,7 +712,7 @@ function buildMarketAddTransportShortcuts(traderMaxTransport) {
  * @author Aleksandar Toplek
  */
 function buildMarketIncomingSum() {
-    if (dev) console.log("BuildMarketIncomingSum - Generating table...");
+    if (dev) console.log("buildMarketIncomingSum - Generating table...");
     // FIXME: Incoming not scaned properly
 	
     var sum 		= [0, 0, 0, 0];
@@ -741,21 +768,21 @@ function buildMarketIncomingSum() {
             "<img class='r4' src='img/x.gif' alt='crop'> " + sum[3] + "&nbsp;&nbsp;"
             );
 		
-        if (dev) console.log("BuildMarketIncomingSum - Table generated! Appending table to beginning...");
+        if (dev) console.log("buildMarketIncomingSum - Table generated! Appending table to beginning...");
 		
         // Appends custom table to beginning
         $(".traders:first").before(customTable.outerHTML());
 		
-        if (dev) console.log("BuildMarketIncomingSum - Table appended successfully! Asigning timer...");
+        if (dev) console.log("buildMarketIncomingSum - Table appended successfully! Asigning timer...");
 		
-        // Updates incoming left time every 100 ms to original table value
+        // Updates incoming left time every 128 ms to original table value
         setInterval(function() {
             $("#paIncomingSumTimer").text(
                 sourceTable.children("tbody:first").children().children("td").children(".in").children().text());
-        }, 100);
+        }, timerStep);
     }
 	
-    if (dev) console.log("BuildMarketIncomingSum - Finished successfully!");
+    if (dev) console.log("buildMarketIncomingSum - Finished successfully!");
 }
 
 /**
@@ -783,6 +810,32 @@ function sendTroopsFillVillagesList() {
     $(".compactInput").html(selectInput);
     
     if (dev) console.log("sendTroopsFillVillagesList - Finished successfully!");
+}
+
+/**
+ * Adds checkbox on the end of reports list to check all reports
+ * 
+ * @author Aleksandar Toplek
+ */
+function reportsShowCheckAll() {
+	if (dev) console.log("reportsShowCheckAll - Started...");
+	
+	if (!$("#markAll").length) {
+		if (dev) console.log("reportsShowCheckAll - Generating data...");
+		
+		var sourceScript = "$(this).up('form').getElements('input[type=checkbox]').each(function(element){element.checked = this.checked;}, this);";
+		var sourceCode = "<div id='markAll'><input class='check' type='checkbox' id='sAll'><span><label for='sAll'>" + _gim("TravianSelectAll") + "</label></span></div>";
+	
+		var obj = $(sourceCode);
+		obj.children("input").attr("onClick", sourceScript);
+
+		$(".paginator").before(obj.outerHTML());
+		
+		if (dev) console.log("reportsShowCheckAll - Box appended");
+	}
+	else if (dev) console.log("reportsShowCheckAll - Box already exists (user uses PLUS account)");
+	
+	if (dev) console.log("reportsShowCheckAll - Finished successfully!");
 }
 
 /**

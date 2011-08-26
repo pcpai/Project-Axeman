@@ -23,4 +23,9 @@
         "message": "sela",
         "description": "Riječ opće namjene za selo - malim slovima"
     }
+    
+    "TravianSelectAll": {
+    	"message": "Oznaci sve",
+        "description": "Koristi se kod odabira vi�e oznaka ili jedinica"
+    }
 }

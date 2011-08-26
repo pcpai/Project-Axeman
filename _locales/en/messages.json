@@ -23,4 +23,9 @@
         "message": "villages",
         "description": "General purpose word for villages in lowe-case"
     }
+    
+    "TravianSelectAll": {
+    	"message": "Select all",
+        "description": "Used on selecting multiple checkboxes or units"
+    }
 }
