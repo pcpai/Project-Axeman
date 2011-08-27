@@ -55,6 +55,10 @@
         "default_title": "Project Axeman",
         "default_popup": "Pages/Popup.html"
     },
+    
+	"permissions": [
+    	"notifications"
+  	],
 
     "icons": {
         "128":  "Icons/icon128.png",

@@ -1,6 +1,6 @@
 {
     "ExtensionInfoDescription": {
-        "message": "Travian 4 ekstenzija koja dodaje 'nedostajeće' opcije u igru.",
+        "message": "Travian 4 ekstenzija koja dodaje 'nedostajece' opcije u igru.",
         "description": "Extension description"
     },
     
@@ -21,11 +21,11 @@
     
     "TravianVillagesLC": {
         "message": "sela",
-        "description": "Riječ opće namjene za selo - malim slovima"
-    }
+        "description": "Rijec opce namjene za selo - malim slovima"
+    },
     
     "TravianSelectAll": {
     	"message": "Oznaci sve",
-        "description": "Koristi se kod odabira vi�e oznaka ili jedinica"
+        "description": "Koristi se kod odabira vise oznaka ili jedinica"
     }
 }

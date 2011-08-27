@@ -40,6 +40,8 @@
 
 */
 
+// TODO: Performance - Retrieve only needed settings
+
 //
 // Global variables
 //
@@ -61,7 +63,7 @@ var checkMarketListMyVillages;
 var checkMarketShowJunkResource;
 var checkMarketShowSumIncomingResources;
 var checkSendTroopsListMyVillages;
-var checkReportShowCheckAll;
+var checkReportShowCheckAll; // TODO: Add setting in options page
 
 //
 // Global constants
@@ -81,14 +83,32 @@ function init() {
 	
     if (dev) console.log("init - Waiting for settings (0/" + settingsAvailable + ")");
     
+    if (dev) {
+    	$("#staticElements").before("<div id='devmode'><b>    Project Axeman DEV mode    </b></div>");
+    	
+    	// Injects link to Debug page (only in dev mode)
+        $("#devmode").append("<a target='_blank' href='chrome-extension://opjhgcmdibiojclonfoefigfkblloofk/Pages/Debug/DebugPage.html'>Debug info</a>");
+    }
+    
     // Begins to load settings
     pageLoadSettings();
+    
+    chrome.extension.sendRequest({
+    	Category: "Extension",
+    	Name: "ShowNotification",
+    	Action: "process",
+    	Data: {
+    		Image: "../Icons/icon48.png",
+    		Title: "Project Axeman",
+    		Message: "Sample Project Axeman message"
+    	}
+    }, function() {});
 	
     // Calls for PageAction show
     chrome.extension.sendRequest({
-        category: "extension", 
-        name: "showActionPageMenu", 
-        action: "set"
+        Category: "Extension", 
+        Name: "ShowActionPage", 
+        Action: "process"
     }, function () { });
 }
 
@@ -123,13 +143,11 @@ function pageLoadSettings() {
  */
 function requestSetting(_settingName) {
     chrome.extension.sendRequest({
-        category: "settings", 
-        name: _settingName, 
-        action: "get"//, 
-        //value: value
+        Category: "Settings", 
+        Name: _settingName, 
+        Action: "get"
     }, function (response) { 
     	settingsLoaded++;
-    	//console.warn(_settingName + "[" + response + "]");
     	eval(_settingName + " = '" + response + "';");
     	
     	if (dev) console.log("requestSetting - Waiting for settings (" + settingsLoaded + "/" + settingsAvailable + ")");
@@ -713,7 +731,6 @@ function buildMarketAddTransportShortcuts(traderMaxTransport) {
  */
 function buildMarketIncomingSum() {
     if (dev) console.log("buildMarketIncomingSum - Generating table...");
-    // FIXME: Incoming not scaned properly
 	
     var sum 		= [0, 0, 0, 0];
     var count 		= 0;
@@ -722,13 +739,13 @@ function buildMarketIncomingSum() {
     var maxTime 	= 0; // Temp variable
     $(".traders").each(function(index) {
         var bodys = $(this).children("tbody");
-        if (bodys.length === 2) {
+        if (bodys.length === 2) {        	
             // Gets max time and timer name
             var timeSpan 	= $(bodys[0].children).children("td").children("div:first").children();
             var time 		= timeSpan.text();
             var timeSplit 	= time.split(":");
-            var timeInteger = timeSplit[0] * 3600 + timeSplit[1] * 60 + timeSplit [2];
-			
+            var timeInteger = timeSplit[0] * 3600 + timeSplit[1] * 60 + timeSplit[2] * 1;
+            
             if (timeInteger > maxTime) {
                 maxTime 	= timeInteger;
                 tableIndex 	= index;

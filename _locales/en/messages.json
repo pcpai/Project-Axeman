@@ -22,7 +22,7 @@
     "TravianVillagesLC": {
         "message": "villages",
         "description": "General purpose word for villages in lowe-case"
-    }
+    },
     
     "TravianSelectAll": {
     	"message": "Select all",
