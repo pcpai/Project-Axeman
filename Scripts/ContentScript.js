@@ -64,6 +64,8 @@ var checkMarketShowJunkResource;
 var checkMarketShowSumIncomingResources;
 var checkSendTroopsListMyVillages;
 var checkReportShowCheckAll; // TODO: Add setting in options page
+// Village info
+var village;
 
 //
 // Global constants
@@ -84,7 +86,7 @@ function init() {
     if (dev) console.log("init - Waiting for settings (0/" + settingsAvailable + ")");
     
     if (dev) {
-    	$("#staticElements").before("<div id='devmode'><b>    Project Axeman DEV mode    </b></div>");
+    	$("#wrapper").append("<div id='devmode'><b>    Project Axeman DEV mode    </b></div>");
     	
     	// Injects link to Debug page (only in dev mode)
         $("#devmode").append("<a target='_blank' href='chrome-extension://opjhgcmdibiojclonfoefigfkblloofk/Pages/Debug/DebugPage.html'>Debug info</a>");
@@ -93,17 +95,8 @@ function init() {
     // Begins to load settings
     pageLoadSettings();
     
-    chrome.extension.sendRequest({
-    	Category: "Extension",
-    	Name: "ShowNotification",
-    	Action: "process",
-    	Data: {
-    		Image: "../Icons/icon48.png",
-    		Title: "Project Axeman",
-    		Message: "Sample Project Axeman message"
-    	}
-    }, function() {});
-	
+    pageLoadVillageData();
+    
     // Calls for PageAction show
     chrome.extension.sendRequest({
         Category: "Extension", 
@@ -132,6 +125,11 @@ function pageLoadSettings() {
 	requestSetting("checkMarketShowSumIncomingResources");
 	requestSetting("checkSendTroopsListMyVillages");
 	requestSetting("checkReportShowCheckAll");
+}
+
+function pageLoadVillageData() {
+	village = Village();
+	
 }
 
 /**
@@ -165,7 +163,12 @@ function requestSetting(_settingName) {
  */
 function initPages() {
     var info = pageGetInfo();
-    pageProcessAll(info);	
+    
+    if (info.pathname !== "/login.php" &&
+    	info.pathname !== "/logout.php" && 
+    	info.pathname !== "/") {
+    	pageProcessAll(info);
+    }
     
     var endTime = (new Date()).getTime();
     if (dev) console.log("initPages - Finished successfully! (" + (endTime - startTime) + ")");
@@ -238,6 +241,22 @@ function pageGetWhere(pathname) {
     else if (pathname.match(/berichte.php/gi)) 	return "Reports";
 
     return undefined;
+}
+
+/**
+ * Filters active village from right village list
+ * 
+ * @author Aleksandar Toplek
+ * 
+ * @returns {String} Name of active village
+ */
+function globalGetActiveVillageName() {
+	if (dev) console.log("globalGetActiveVillageName - Getting village name...");
+	
+    var name = $("li[class*='entry'] > a[class='active']").text();
+	
+    if (dev) console.log("globalGetActiveVillageName - Village name [" + name + "]");
+    return name;
 }
 
 /**
@@ -997,7 +1016,63 @@ function _selectE () {
  * @param {String} name Name of locale message
  * 
  * @return {String} Message from current locale language
+ * 
+ * @private
  */
 function _gim(name) {
     return chrome.i18n.getMessage(name);
+}
+
+/**
+ * Sends request for Notification message
+ * 
+ * @author Aleksandar Toplek
+ * 
+ * @param {String} image Image name
+ * @param {String} message Message to show
+ * 
+ * @private
+ */
+function _sendNotifiRequest(image, message) {
+    chrome.extension.sendRequest({
+    	Category: "Extension",
+    	Name: "ShowNotification",
+    	Action: "process",
+    	Data: {
+    		Image: image,
+    		Title: "Project Axeman",
+    		Message: message
+    	}
+    }, function() {});
+}
+
+function Village() {
+	this.Name = "<NameNotDefined>";
+	this.IsMainCity = false;
+	
+	this.ResourceStorageLastUpdated = 0;
+	this.ResourceStorage = [0, 0];
+	
+	this.ResourceProduction = [0, 0, 0, 0];
+	
+	this.ResourceOverflowLastUpdate = 0;
+	this.ResourceOverflowTime = [0, 0, 0, 0];
+	
+	this.VillageInLastUpdated = 0;
+	this.VillageInBuildings = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+	this.VillageInLevels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+	
+	this.VillageOutLastUpdated = 0;
+	this.VillageOutType = "f3";
+	this.VillageOutLevels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+	
+	// TODO: Add troops VillageOut
+	// TODO: Population
+	// TODO: Coordinates
+	// TODO: Oazes
+	// TODO: Armory
+	// TODO: Artefacts
+	// TODO: Can build/conquer new villages
+	// TODO: Culture points
+	// TODO: Loyalty 
 }

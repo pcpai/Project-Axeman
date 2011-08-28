@@ -77,13 +77,28 @@ function requestExtension(name, action, data, callback) {
 }
 
 function createNotifiSimple(image, title, message, timeout) {
-	var notification = webkitNotifications.createNotification(image, title, message);
+	var notification = webkitNotifications.createNotification(resolveImage(image), title, message);
 	
 	notification.show();
 	
 	setTimeout(function () {
 		notification.cancel();
 	}, timeout || 5000);
+}
+
+function resolveImage(name) {
+	switch (name) {
+		case "WoodResource":
+			return "../Images/WoodResource.png";
+		case "ClayResource":
+			return "../Images/ClayResource.png";
+		case "IronResource":
+			return "../Images/IronResource.png";
+		case "CropResource":
+			return "../Images/CropResource.png";
+		default:
+			return "../Images/ProjectAxeman.png";
+	}
 }
 
 function createNotifiHTML(pageURL, timeout) {
