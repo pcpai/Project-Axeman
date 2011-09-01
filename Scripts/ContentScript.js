@@ -41,6 +41,8 @@
 */
 
 // TODO: Performance - Retrieve only needed settings
+// TODO: Replace Settings requests with Data requests
+// TODO: Implement MVC model
 
 //
 // Global variables
@@ -49,8 +51,8 @@
 var dev = true;
 var dbgtmrs = false;
 // Other variables
-var settingsLoaded = 0;
-var settingsAvailable = 10;
+var dataLoaded = 0;
+var dataAvailable = 11;
 var startTime = 0;
 var timerStep = 128;
 // Settings
@@ -83,76 +85,46 @@ function init() {
 	if (dev) console.log("init - Initializing...");
     startTime = (new Date()).getTime();
 	
-    if (dev) console.log("init - Waiting for settings (0/" + settingsAvailable + ")");
+    if (dev) console.log("init - Waiting for settings (0/" + dataAvailable + ")");
     
     if (dev) {
-    	$("#wrapper").append("<div id='devmode'><b>    Project Axeman DEV mode    </b></div>");
+    	var extensionID = "iocibcglikkcbjcdkenhnfngokknheen";
+    	
+    	var style = '<style type="text/css">' +
+    				'	#DevBar {' +
+    				'		position:fixed;' +
+    				'		bottom: 0px; right: 0px; left: 0px;' + 
+    				'		padding: 5px;' +
+    				'		background: -webkit-gradient(linear, left top, left bottom, from(#D3D3D3), to(#919191));' +	
+    				'	}' +
+    				'	#DevButton {' +
+    				'		color: lightgray;' +
+    				'		background: -webkit-gradient(linear, left top, left bottom, from(#747474), to(#4B4B4B));' +
+    				'		padding: 2px 8px 2px 8px;' +
+    				'		border-radius: 10px;' +
+    				'	}' +
+    				'	#DevInfoText {' +
+    				'		position:absolute; left: auto; right: 8px;' +
+    				'		color: gray;' +
+    				'	}' +
+    				'</style>';
+    	$("head").append(style);
+    	$("body").append('<div id="DevBar" class="devbar"><b>&nbsp;Project Axeman DEV mode&nbsp;&nbsp;&nbsp;&nbsp;</b></div>');
     	
     	// Injects link to Debug page (only in dev mode)
-        $("#devmode").append("<a target='_blank' href='chrome-extension://opjhgcmdibiojclonfoefigfkblloofk/Pages/Debug/DebugPage.html'>Debug info</a>");
+        $(".devbar").append('<a id="DevButton" target="_blank" href="chrome-extension://' + extensionID + '/Pages/Debug/DebugPage.html">Debug info</a>&nbsp;&nbsp;&nbsp;&nbsp;');
+        
+        // Injects link to Options page (only in dev mode)
+        $(".devbar").append('<a id="DevButton" target="_blank" href="chrome-extension://' + extensionID + '/Pages/Options.html">Options page</a>&nbsp;&nbsp;&nbsp;&nbsp;');
+        
+        $(".devbar").append('<a id="DevInfoText" href="#" class="infotextTime">Script time: ### ms</a>');
     }
     
     // Begins to load settings
-    pageLoadSettings();
-    
-    pageLoadVillageData();
+    pageLoadData();
     
     // Calls for PageAction show
-    chrome.extension.sendRequest({
-        Category: "Extension", 
-        Name: "ShowActionPage", 
-        Action: "process"
-    }, function () { });
-}
-
-/**
- * Requests for all settings to load
- * 
- * @author Aleksandar Toplek
- */
-function pageLoadSettings() {
-	if (dev) console.log("pageLoadSettings - dev[" + dev + "]");
-	if (dev) console.log("pageLoadSettings - dbgtmrs[" + dbgtmrs + "]");
-	if (dev) console.log("pageLoadSettings - [" + settingsAvailable + "] settings available");
-	
-	requestSetting("checkGlobalRemoveInGameHelp");
-	requestSetting("checkGlobalStorageOverflowTimeout");
-	requestSetting("checkBuildBuildingResourceDifference");
-	requestSetting("checkBuildUnitResourceDifference");
-	requestSetting("checkMarketShowX2Shortcut");
-	requestSetting("checkMarketListMyVillages");
-	requestSetting("checkMarketShowJunkResource");
-	requestSetting("checkMarketShowSumIncomingResources");
-	requestSetting("checkSendTroopsListMyVillages");
-	requestSetting("checkReportShowCheckAll");
-}
-
-function pageLoadVillageData() {
-	village = Village();
-	
-}
-
-/**
- * Gets setting and sets it to variable
- * 
- * @author Aleksandar Toplek
- * 
- * @param {String} _settingName Name of setting to retrieve
- */
-function requestSetting(_settingName) {
-    chrome.extension.sendRequest({
-        Category: "Settings", 
-        Name: _settingName, 
-        Action: "get"
-    }, function (response) { 
-    	settingsLoaded++;
-    	eval(_settingName + " = '" + response + "';");
-    	
-    	if (dev) console.log("requestSetting - Waiting for settings (" + settingsLoaded + "/" + settingsAvailable + ")");
-    	if (settingsLoaded === settingsAvailable) {
-    		initPages();
-    	}
-    });
+    _sendExtensionProcessRequest("ShowActionPage");
 }
 
 /**
@@ -170,8 +142,72 @@ function initPages() {
     	pageProcessAll(info);
     }
     
+    // All finished, saving data
+    saveData();
+    
     var endTime = (new Date()).getTime();
-    if (dev) console.log("initPages - Finished successfully! (" + (endTime - startTime) + ")");
+    if (dev) {
+    	$(".infotextTime").text("Script time: " + (endTime - startTime) + " ms");
+    	console.log("initPages - Finished successfully! (" + (endTime - startTime) + ")");
+    }
+}
+
+function saveData() {
+	if (dev) console.log("saveData - Saving started...");
+	
+	// TODO: Save village data
+	
+	if (dev) console.log("saveData - All requests sent!");
+}
+
+/**
+ * Requests for all settings to load
+ * 
+ * @author Aleksandar Toplek
+ */
+function pageLoadData() {
+	if (dev) console.log("pageLoadSettings - dev[" + dev + "]");
+	if (dev) console.log("pageLoadSettings - dbgtmrs[" + dbgtmrs + "]");
+	if (dev) console.log("pageLoadSettings - [" + dataAvailable + "] settings available");
+	
+	requestData("Settings", "checkGlobalRemoveInGameHelp");
+	requestData("Settings", "checkGlobalStorageOverflowTimeout");
+	requestData("Settings", "checkBuildBuildingResourceDifference");
+	requestData("Settings", "checkBuildUnitResourceDifference");
+	requestData("Settings", "checkMarketShowX2Shortcut");
+	requestData("Settings", "checkMarketListMyVillages");
+	requestData("Settings", "checkMarketShowJunkResource");
+	requestData("Settings", "checkMarketShowSumIncomingResources");
+	requestData("Settings", "checkSendTroopsListMyVillages");
+	requestData("Settings", "checkReportShowCheckAll");
+	
+	requestData("Data", "villageData" + globalGetActiveVillageName(), "village");
+}
+
+function pageLoadVillageData() {
+	if (village === "null") {
+		village = new Village();
+		village.Name = globalGetActiveVillageName();
+	}
+}
+
+/**
+ * Gets setting and sets it to variable
+ * 
+ * @author Aleksandar Toplek
+ * 
+ * @param {String} _settingName Name of setting to retrieve
+ */
+function requestData(_category, _settingName, _variableName) {
+	_sendDataGetRequest(_settingName, function (response) { 
+    	dataLoaded++;
+    	eval((_variableName || _settingName) + " = '" + response + "';");
+    	
+    	if (dev) console.log("requestData - Waiting for data (" + dataLoaded + "/" + dataAvailable + ")");
+    	if (dataLoaded === dataAvailable) {
+    		initPages();
+    	}
+    });
 }
 
 /**
@@ -207,10 +243,12 @@ function pageGetInfo() {
 function pageProcessAll(info) {
     if (dev) console.log("pageProcessAll - Starting...");
 	
-    var where = pageGetWhere(info.pathname);
-	
+    var where = pageGetWhere(info.pathname);    
     if (dev) console.log("pageProcessAll - Pathname [" + info.pathname + "] mathched with [" + where + "]");
 
+    pageLoadVillageData();
+    village.ResourceProduction = villageGetResourceProduction();
+    
     if (checkGlobalRemoveInGameHelp === "On" | checkGlobalRemoveInGameHelp === "null") 
     	globalRemoveInGameHelp();
 
@@ -298,29 +336,12 @@ function globalRemoveInGameHelp() {
 function globalOverflowTimer() {
     if (dev) console.log("globalOverflowTimer - Initializing...");
 	
-    var perHour 	= [0, 0, 0, 0];
-    var  scriptText = $("script:contains('resources.production')").text();
-
-    // From http://txt2re.com/index-javascript.php3?s=resources.production%20=%20{%20%27l1%27:%201250,%27l2%27:%201500,%27l3%27:%201250,%27l4%27:%20508};&15&13&12&11&17
-    // Gets resource production from <script /> element in page
-    var re = '.*?\\d+.*?(\\d+).*?\\d+.*?(\\d+).*?\\d+.*?(\\d+)+.*?\\d+.*?(\\d+)';
-    var p = new RegExp(re, ["i"]);
-    var m = p.exec(scriptText);
-    if (m != null) {
-        perHour[0] = m[1];
-        perHour[1] = m[2];
-        perHour[2] = m[3];
-        perHour[3] = m[4];
-	
-        if (dev) console.log("globalOverflowTimer - Resources per hour: " + perHour[0] + " " + perHour[1] + " " + perHour[2] + " " + perHour[3]);
-    }
-	
     $("#res").children().each(function(index) {
         // Skips crop consumption
         if (index !== 4) {
             var current 	= globalGetWarehousAmount(index + 1);
             var max 		= globalGetWarehousMax(index + 1);
-            var timeLeft 	= (max - current) / perHour[index];
+            var timeLeft 	= (max - current) / village.ResourceProduction[index];
 	
             if (dev) console.log("globalOverflowTimer - l" + (index + 1) + " appended!");
 			
@@ -328,7 +349,7 @@ function globalOverflowTimer() {
         }
     });
     
-    setInterval(globalOverflowTimerFunction, 1000);
+    setInterval(globalOverflowTimerFunction, 1000, "paResourceOverflowTime");
     if (dev) console.log("globalOverflowTimer - Timer registered!");
             
     if (dev) console.log("globalOverflowTimer - Finished!");
@@ -338,10 +359,16 @@ function globalOverflowTimer() {
  * Called by GlobalOverflow timer
  *
  * @author Aleksandar Toplek
+ * 
+ * @param {String} id 		Element id
+ * @param {String} cother	Color for hours > 2
+ * @param {String} cclose 	Color for hours < 2
+ * @param {String} calmost 	Color for hours < 0.75
+ * @param {String} czero	Color for hours = 0
  */
-function globalOverflowTimerFunction() {
+function globalOverflowTimerFunction(id, czero, calmost, cclose, cother) {
     for (var index = 0; index < 4; index++) {
-        $("#paResourceOverflowTime" + index).each(function() {
+        $("#" + id + index).each(function() {
             // Get current time from element
             var hours = _timeToHours($(this).text());
             
@@ -351,13 +378,14 @@ function globalOverflowTimerFunction() {
             if (hours > 0) { 
                 // Subtracts one second and writes new text to element
                 hours -= 0.0002777006777777; // 1 s -> 1/~3600 (3601 because of calculation error)
-                $(this).text(_hoursToTime(hours));
+                $(this).html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + _hoursToTime(hours));
             }
 
             // Changes element style (color) depending on current time state
-            if (hours < 0.75) $(this).attr("style", "text-align: right; color:#B20C08;");
-            else if (hours < 2) $(this).attr("style", "text-align: right; color:#FFCC33;");
-            else $(this).attr("style", "text-align: right; color:black;");
+            if (hours === 0) $(this).attr("style", "text-align: right; color:" + (czero || "#B20C08") + ";");
+            else if (hours < 0.75) $(this).attr("style", "text-align: right; color:" + (calmost || "#B20C08") + ";");
+            else if (hours < 2) $(this).attr("style", "text-align: right; color:" + (cclose || "#FFCC33") + ";");
+            else $(this).attr("style", "text-align: right; color:" + (cother || "black") + ";");
         });
     }
 }
@@ -477,7 +505,7 @@ function buildCalculateBuildingResourcesDifference() {
         // Building cost
         // .costs are for town hall celebration
         // .contractCosts are for building/upgreding building
-        $(".contractCosts > div > span[class*='resources r" + (rindex + 1) + "'],.costs > div > span[class*='resources r" + (rindex + 1) + "']").each(function() {
+        $(".contractCosts > div > span[class*='resources r" + (rindex + 1) + "'],.costs > div > span[class*='resources r" + (rindex + 1) + "']").each(function(index) {
             var res = parseInt($(this).text(), 10);
             var diff = inWarehouse - res;
             var color = diff < 0 ? "#B20C08" : "#0C9E21";
@@ -486,6 +514,12 @@ function buildCalculateBuildingResourcesDifference() {
             $(this).append(div);
 
             if (dev) console.log("buildCalculateBuildingResourcesDifference - r" + (rindex + 1) + " diff[" + diff + "]");
+
+            $(this).append("<div id='paResourceDifferenceC" + index + "R" + rindex + "'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp" + _hoursToTime(diff < 0 ? (-diff) / village.ResourceProduction[rindex] : 0) + "</div>");
+            globalOverflowTimerFunction("paResourceDifferenceC" + index + "R", '#0C9E21', '#AEBF61', '#A6781C', '#B20C08');
+            if (rindex === 0) {
+            	setInterval("globalOverflowTimerFunction('paResourceDifferenceC" + index + "R', '#0C9E21', '#AEBF61', '#A6781C', '#B20C08')", 1000);
+            }
         });        
     }
     
@@ -1024,6 +1058,36 @@ function _gim(name) {
 }
 
 /**
+ * Gets current village resource production per hour
+ * 
+ * @author Aleksandar Toplek
+ * 
+ * @returns {Array} Resource production
+ * 					0 wood, 1 clay, 2 iron, 3 crop
+ */
+function villageGetResourceProduction() {
+	var perHour 	= [0, 0, 0, 0];
+    var  scriptText = $("script:contains('resources.production')").text();
+
+    // From http://txt2re.com/index-javascript.php3?s=resources.production%20=%20{%20%27l1%27:%201250,%27l2%27:%201500,%27l3%27:%201250,%27l4%27:%20508};&15&13&12&11&17
+    // Gets resource production from <script /> element in page
+    var re = '.*?\\d+.*?(\\d+).*?\\d+.*?(\\d+).*?\\d+.*?(\\d+)+.*?\\d+.*?(\\d+)';
+    var p = new RegExp(re, ["i"]);
+    var m = p.exec(scriptText);
+    if (m != null) {
+        perHour[0] = m[1];
+        perHour[1] = m[2];
+        perHour[2] = m[3];
+        perHour[3] = m[4];
+	
+        if (dev) console.log("globalOverflowTimer - Resources per hour: " + perHour[0] + " " + perHour[1] + " " + perHour[2] + " " + perHour[3]);
+    }
+    
+    return perHour;
+}
+
+
+/**
  * Sends request for Notification message
  * 
  * @author Aleksandar Toplek
@@ -1034,38 +1098,114 @@ function _gim(name) {
  * @private
  */
 function _sendNotifiRequest(image, message) {
-    chrome.extension.sendRequest({
-    	Category: "Extension",
-    	Name: "ShowNotification",
-    	Action: "process",
-    	Data: {
-    		Image: image,
-    		Title: "Project Axeman",
-    		Message: message
-    	}
-    }, function() {});
+	_sendExtensionProcessRequest("ShowNotification", new Notification(image, "ProjectAxeman", message));
+}
+
+//TODO: Comment function
+//TODO: Log function
+//TODO: Test function
+function Notification(image, title, message) {
+	this.Image = image;
+	this.Title = title;
+	this.Message = message;
+}
+
+//TODO: Comment function
+//TODO: Log function
+//TODO: Test function
+function _sendDataGetRequest(name, callback) {
+	_sendRequest(new Request("Data", name, "get"), callback);
+}
+
+//TODO: Comment function
+//TODO: Log function
+//TODO: Test function
+function _sendDataSetRequest(name, data, callback) {
+	_sendRequest(new Request("Data", name, "set", data), callback);
+}
+
+//TODO: Comment function
+//TODO: Log function
+function _sendTravianGetRequest(name, callback) {
+	_sendRequest(new Request("Travian", name, "get"), callback);
+}
+
+//TODO: Comment function
+//TODO: Log function
+//TODO: Test function
+function _sendTravianProcessRequest(name, data, callback) {
+	_sendRequest(new Request("Travian", name, "process", data), callback);
+}
+
+//TODO: Comment function
+//TODO: Log function
+//TODO: Test function
+function _sendTravianSetRequest(name, data, callback) {
+	_sendRequest(new Request("Travian", name, "set", data), callback);
+}
+
+//TODO: Comment function
+//TODO: Log function
+//TODO: Test function
+function _sendExtensionGetRequest(name, callback) {
+	_sendRequest(new Request("Extension", name, "get"), callback);
+}
+
+//TODO: Comment function
+//TODO: Log function
+function _sendExtensionProcessRequest(name, data, callback) {
+	_sendRequest(new Request("Extension", name, "process", data), callback);
+}
+
+//TODO: Comment function
+//TODO: Log function
+//TODO: Test function
+function _sendExtensionSetRequest(name, data, callback) {
+	_sendRequest(new Request("Extension", name, "set", data), callback);
+}
+
+//TODO: Comment function
+//TODO: Log function
+//TODO: Test function
+function Request(category, name, action, data) {
+	this.Category = category;
+	this.Name = name;
+	this.Action = action;
+	this.Data = data;
+}
+
+// TODO: Comment function
+// TODO: Log function
+// TODO: Test function
+function _sendRequest(request, callback) {
+	chrome.extension.sendRequest(request, callback || function () {});
+}
+
+function Player() {
+	
 }
 
 function Village() {
-	this.Name = "<NameNotDefined>";
-	this.IsMainCity = false;
+	this.name = "<NameNotDefined>";
+	this.isMainCity = false;
 	
-	this.ResourceStorageLastUpdated = 0;
-	this.ResourceStorage = [0, 0];
+	this.resourceStorageLastUpdated = 0;
+	this.resourceStorage = [0, 0];
 	
-	this.ResourceProduction = [0, 0, 0, 0];
+	this.resourceProduction = [0, 0, 0, 0];
+
+	this.resourceOverflowLastUpdate = 0;
+	this.resourceOverflowTime = [0, 0, 0, 0];
 	
-	this.ResourceOverflowLastUpdate = 0;
-	this.ResourceOverflowTime = [0, 0, 0, 0];
+	this.villageInLastUpdated = 0;
+	this.villageInBuildings = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+	this.villageInLevels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 	
-	this.VillageInLastUpdated = 0;
-	this.VillageInBuildings = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-	this.VillageInLevels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+	this.villageOutLastUpdated = 0;
+	this.villageOutType = "f3";
+	this.villageOutLevels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 	
-	this.VillageOutLastUpdated = 0;
-	this.VillageOutType = "f3";
-	this.VillageOutLevels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-	
+	// TODO: Building/Upgrading queue
 	// TODO: Add troops VillageOut
 	// TODO: Population
 	// TODO: Coordinates

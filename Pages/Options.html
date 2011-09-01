@@ -80,6 +80,9 @@
 
                 // Send troops
                 setupCheckboxButton("checkSendTroopsListMyVillages");
+
+                // PLUS options
+                setupCheckboxButton("checkReportShowCheckAll");
             }
 
             function setupCheckboxButton(name) {
@@ -88,7 +91,7 @@
                 //     ...
                 // } catch (e) {
                 //     if (e == QUOTA_EXCEEDED_ERR) {
-                //         alert(�Quota exceeded!�); //data wasn�t successfully saved due to quota exceed so throw an error
+                //         alert("Quota exceeded!"); //data wasn�t successfully saved due to quota exceed so throw an error
                 //     }
                 // }
 
@@ -124,6 +127,7 @@
                 <li class="ui-state-default ui-corner-top"><a href="#tabs-2">Building</a></li>
                 <li class="ui-state-default ui-corner-top"><a href="#tabs-3">Marketplace</a></li>
                 <li class="ui-state-default ui-corner-top"><a href="#tabs-4">Sending troops</a></li>
+                <li class="ui-state-default ui-corner-top"><a href="#tabs-5">PLUS options</a></li>
             </ul>
             <div id="tabs-1" class="ui-tabs-panel ui-widget-content ui-corner-bottom">
 
@@ -227,6 +231,23 @@
                 </table>
 
             </div>
+            
+            <div id="tabs-5" class="ui-tabs-panel ui-widget-content ui-corner-bottom">
+
+                <table>
+
+                    <tr>
+                        <td>Check all option in reports page&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                        <td>
+                            <input type="checkbox" id="checkReportShowCheckAll" class="ui-helper-hidden-accessible">
+                            <label id="checkReportShowCheckAllLabel" for="checkReportShowCheckAll" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button" aria-disabled="false" />
+                        </td>						
+                    </tr>
+
+                </table>
+
+            </div>
+            
         </div>
         
         <div style="text-align: right;"><a href="Debug/DebugPage.html" alt="Project Axeman - Debug page">Debug page</a></div>

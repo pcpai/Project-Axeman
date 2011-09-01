@@ -54,8 +54,8 @@ function gotRequest(request, sender, sendResponse) {
     if (request.Category === "Extension") {
     	requestExtension(request.Name, request.Action, { Data: request.Data, Sender: sender }, sendResponse);
     }
-    else if (request.Category === "Settings") {
-        requestSettings(request.Name, request.Action, request.Data, sendResponse);
+    else if (request.Category === "Settings" | request.Category === "Data") {
+        requestData(request.Name, request.Action, request.Data, sendResponse);
     }
     else if (request.Category === "Travian") {
     	requestTravian(request.Name, request.Action, request.Data, sendResponse);
@@ -115,7 +115,7 @@ function requestTravian(name, action, data, callback) {
 	
 }
 
-function requestSettings(name, action, data, callback) {
+function requestData(name, action, data, callback) {
 	if (action === "set") {
 		var success = _setVariable(name, data);
 		callback(success);
