@@ -43,6 +43,7 @@
 // TODO: Performance - Retrieve only needed settings
 // TODO: Replace Settings requests with Data requests
 // TODO: Implement MVC model
+// TODO: Sitter - Villages save to session storage rather than to localStorage
 
 //
 // Global variables
@@ -155,7 +156,7 @@ function initPages() {
 function saveData() {
 	if (dev) console.log("saveData - Saving started...");
 	
-	// TODO: Save village data
+	_sendDataSetRequest("village" + village.name, JSON.stringify(village));
 	
 	if (dev) console.log("saveData - All requests sent!");
 }
@@ -170,25 +171,29 @@ function pageLoadData() {
 	if (dev) console.log("pageLoadSettings - dbgtmrs[" + dbgtmrs + "]");
 	if (dev) console.log("pageLoadSettings - [" + dataAvailable + "] settings available");
 	
-	requestData("Settings", "checkGlobalRemoveInGameHelp");
-	requestData("Settings", "checkGlobalStorageOverflowTimeout");
-	requestData("Settings", "checkBuildBuildingResourceDifference");
-	requestData("Settings", "checkBuildUnitResourceDifference");
-	requestData("Settings", "checkMarketShowX2Shortcut");
-	requestData("Settings", "checkMarketListMyVillages");
-	requestData("Settings", "checkMarketShowJunkResource");
-	requestData("Settings", "checkMarketShowSumIncomingResources");
-	requestData("Settings", "checkSendTroopsListMyVillages");
-	requestData("Settings", "checkReportShowCheckAll");
+	requestData("Data", "checkGlobalRemoveInGameHelp");
+	requestData("Data", "checkGlobalStorageOverflowTimeout");
+	requestData("Data", "checkBuildBuildingResourceDifference");
+	requestData("Data", "checkBuildUnitResourceDifference");
+	requestData("Data", "checkMarketShowX2Shortcut");
+	requestData("Data", "checkMarketListMyVillages");
+	requestData("Data", "checkMarketShowJunkResource");
+	requestData("Data", "checkMarketShowSumIncomingResources");
+	requestData("Data", "checkSendTroopsListMyVillages");
+	requestData("Data", "checkReportShowCheckAll");
 	
-	requestData("Data", "villageData" + globalGetActiveVillageName(), "village");
+	requestData("Data", "village" + globalGetActiveVillageName(), "village");
 }
 
 function pageLoadVillageData() {
 	if (village === "null") {
 		village = new Village();
-		village.Name = globalGetActiveVillageName();
+		village.name = globalGetActiveVillageName();
 	}
+	else village = JSON.parse(village);
+	
+	console.log("pageLoadVillageData - Village loaded [" + village.name + "]");
+	console.log(village);
 }
 
 /**
@@ -247,7 +252,7 @@ function pageProcessAll(info) {
     if (dev) console.log("pageProcessAll - Pathname [" + info.pathname + "] mathched with [" + where + "]");
 
     pageLoadVillageData();
-    village.ResourceProduction = villageGetResourceProduction();
+    village.Resources.production = villageGetResourceProduction();
     
     if (checkGlobalRemoveInGameHelp === "On" | checkGlobalRemoveInGameHelp === "null") 
     	globalRemoveInGameHelp();
@@ -341,7 +346,7 @@ function globalOverflowTimer() {
         if (index !== 4) {
             var current 	= globalGetWarehousAmount(index + 1);
             var max 		= globalGetWarehousMax(index + 1);
-            var timeLeft 	= (max - current) / village.ResourceProduction[index];
+            var timeLeft 	= (max - current) / village.Resources.production[index];
 	
             if (dev) console.log("globalOverflowTimer - l" + (index + 1) + " appended!");
 			
@@ -515,7 +520,7 @@ function buildCalculateBuildingResourcesDifference() {
 
             if (dev) console.log("buildCalculateBuildingResourcesDifference - r" + (rindex + 1) + " diff[" + diff + "]");
 
-            $(this).append("<div id='paResourceDifferenceC" + index + "R" + rindex + "'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp" + _hoursToTime(diff < 0 ? (-diff) / village.ResourceProduction[rindex] : 0) + "</div>");
+            $(this).append("<div id='paResourceDifferenceC" + index + "R" + rindex + "'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp" + _hoursToTime(diff < 0 ? (-diff) / village.Resources.production[rindex] : 0) + "</div>");
             globalOverflowTimerFunction("paResourceDifferenceC" + index + "R", '#0C9E21', '#AEBF61', '#A6781C', '#B20C08');
             if (rindex === 0) {
             	setInterval("globalOverflowTimerFunction('paResourceDifferenceC" + index + "R', '#0C9E21', '#AEBF61', '#A6781C', '#B20C08')", 1000);
@@ -1181,38 +1186,134 @@ function _sendRequest(request, callback) {
 	chrome.extension.sendRequest(request, callback || function () {});
 }
 
-function Player() {
+/**
+ * Extension controller
+ * Model-View connection
+ *
+ * @author Aleksandar Toplek
+ *
+ * @param {Boolean} devMode Developer mode state
+ */
+function Controller(devMode) {
+	InitializeController();
 	
+	function BeginInitialization() {
+		_log("BeginInitialization - Initialization of new controller began...");
+		
+		_log("BeginInitialization - Finished!");
+	}
+	
+	function _log(message) {
+		console.log(message);
+	}
+}
+
+/**
+ * View functions (retrieve&modify)
+ * View part of MVC framework
+ *
+ * @author Aleksandar Toplek
+ */
+function PageView() {
+	
+// Page data 
+// NOT NEEDED SINCE ITS ONLY VARIABLE IN CLASS
+//	this.Gatherer = {
+		
+//	};
+// This is done through view object
+/*	
+	// Page modifications
+	this.Modifier = {
+		
+	};
+*/
 }
 
 function Village() {
+	// NOTE: Any *.travian.*/... page (except help) 
 	this.name = "<NameNotDefined>";
-	this.isMainCity = false;
-	
-	this.resourceStorageLastUpdated = 0;
-	this.resourceStorage = [0, 0];
-	
-	this.resourceProduction = [0, 0, 0, 0];
+	this.loyalty = 100;
 
-	this.resourceOverflowLastUpdate = 0;
-	this.resourceOverflowTime = [0, 0, 0, 0];
+	// NOTE: On spieler.php?uid=* page
+	this.isMainCity = false;
+	this.population = 0;
+	this.coordX = 0;
+	this.coordY = 0;
 	
-	this.villageInLastUpdated = 0;
-	this.villageInBuildings = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-	this.villageInLevels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+	// TODO: Is this data or control?
+	//this.resourceOverflowLastUpdate = 0;
+	//this.resourceOverflowTime = [0, 0, 0, 0];
 	
-	this.villageOutLastUpdated = 0;
-	this.villageOutType = "f3";
-	this.villageOutLevels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+	// NOTE: On any *.travian.*/... page (except help)
+	this.Resources = {
+		lastUpdated: 0,
+		
+		storage: [0, 0],
+		production: [0, 0, 0, 0]
+	};
 	
-	// TODO: Building/Upgrading queue
-	// TODO: Add troops VillageOut
-	// TODO: Population
-	// TODO: Coordinates
-	// TODO: Oazes
-	// TODO: Armory
+	// NOTE: On dorf2.php
+	this.VillageIn = {
+		lastUpdated: 0,
+		
+		levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		buildings: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+	};
+
+	// NOTE: On dorf1.php
+	this.VillageOut = {
+		lastUpdated: 0,
+		
+		type: "f3",
+		levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+	};
+	
+	this.Troops = {
+		lastUpdatedMyTroops: 0,
+		lastUpdatedTotalTroops: 0,
+	
+		// NOTE: myTroops don't count units in support or attack
+		// NOTE: On dorf1.php
+		myTroops: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		// Note: On build.php?id=39 (rally point)
+		TotalTroops: {
+			gauls: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+			romans: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+			teutons: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+			nature: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+		}
+	};
+	
+	this.Queue = {
+		// NOTE: On dorf1.php
+		// NOTE: On dorf2.php
+		Building: {
+			
+		},
+		// NOTE: On build.php > barracks
+		// NOTE: On build.php > stable
+		// NOTE: On build.php > Workshop 
+		Troops: {
+			
+		},
+		// Note: On build.php > palace
+		// NOTE: On build.php > residence 
+		PalaceResidence: {
+			
+		},
+		// NOTE: On build.php > armory
+		Armory: {
+			
+		},
+		// NOTE: On build.php > town hall
+		TownHall: {
+			
+		}
+	};
+	
+	// TODO: Oases
 	// TODO: Artefacts
-	// TODO: Can build/conquer new villages
+	// TODO: Can build/conquer new village
 	// TODO: Culture points
-	// TODO: Loyalty 
 }

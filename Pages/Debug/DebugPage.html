@@ -36,7 +36,15 @@
 
 			function addNewObject(item, obj) {
 				var newItem = $("<li><span><b>{" + typeof(obj) + "}</b>&nbsp;&nbsp;&nbsp;&nbsp;</span></li>");
-				newItem.append(obj);
+				//for (var property in obj) {
+					newItem.append(obj);
+				//}
+
+				/* http://www.codedigest.com/FAQ/52-How-to-Get-All-Properties-and-its-Value-from-a-JavaScript-Object-.aspx
+				for (var propertyName in evt) {
+					alert("evt[" + propertyName + "]: " + evt[propertyName]);
+				}
+				*/
 				
 				item.append(newItem);
 			}

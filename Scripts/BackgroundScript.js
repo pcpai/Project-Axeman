@@ -54,8 +54,11 @@ function gotRequest(request, sender, sendResponse) {
     if (request.Category === "Extension") {
     	requestExtension(request.Name, request.Action, { Data: request.Data, Sender: sender }, sendResponse);
     }
-    else if (request.Category === "Settings" | request.Category === "Data") {
+    else if (request.Category === "Data") {
         requestData(request.Name, request.Action, request.Data, sendResponse);
+    }
+    else if (request.Category === "Session") {
+    	requestData(request.Name, request.Action, request.Data, sendResponse, sessionStorage);
     }
     else if (request.Category === "Travian") {
     	requestTravian(request.Name, request.Action, request.Data, sendResponse);
@@ -115,27 +118,27 @@ function requestTravian(name, action, data, callback) {
 	
 }
 
-function requestData(name, action, data, callback) {
+function requestData(name, action, data, callback, source) {
 	if (action === "set") {
-		var success = _setVariable(name, data);
+		var success = _setVariable(name, data, source || localStorage);
 		callback(success);
 	}
 	else {
-		var response = _getVariable(name);
+		var response = _getVariable(name, source || localStorage);
 		callback(response);
 	}
 }
 
-function _getVariable(name) {
-	var returnValue = localStorage.getItem(name);
-    console.log("_getVariable - Setting " + name + " GET [" + returnValue + "]");
+function _getVariable(name, source) {
+	var returnValue = source.getItem(name);
+    console.log("_getVariable - Data " + name + " GET [" + returnValue + "]");
     return returnValue;
 }
 
-function _setVariable(name, value) {
+function _setVariable(name, value, source) {
 	try {
-        localStorage.setItem(name, value);
-        console.log("_setVariable - Setting " + name + " SET [" + value + "]");
+        source.setItem(name, value);
+        console.log("_setVariable - Data " + name + " SET [" + value + "]");
         
         return true;
     } catch (e) {
