@@ -1,7 +1,7 @@
 # Project Axeman
 _Current version 0.1.7_
 
-<hr />
+<hr color="#c7c34c" size="2">
 
 ## Overview
 
@@ -9,7 +9,7 @@ Travian 4 extension that adds some "missing" features to game.
 
 _This extension uses [Google Chrome](http://www.google.com/chrome "Google Chrome web page") built-in capability to crawl and change page content using JavaScript. This extension isn't supported by Travian Games GmbH and is forbidden by [Travian Game rules and Terms of use](http://agb.traviangames.com/Travian_EN_Terms.pdf "Travian Terms of use (English)")! By using this extension and all features you agree with [License](https://github.com/JustBuild/Project-Axeman/blob/master/LICENSE.md "EULA on github")._
 
-<hr />
+<hr color="#c7c34c" size="2">
 
 ## Features
 
@@ -33,7 +33,7 @@ _This extension uses [Google Chrome](http://www.google.com/chrome "Google Chrome
 - _Troops Wave sender_
 - _a lot more..._
 
-<hr />
+<hr color="#c7c34c" size="2">
 
 ## Changelog
 

@@ -1,6 +1,6 @@
 # Project Axeman
 
-<hr />
+<hr color="#c7c34c" size="2">
 
 ## License
 
@@ -16,7 +16,7 @@ THIS SOFTWARE IS PROVIDED BY JUSTBUILD DEVELOPMENT ''AS IS'' AND ANY EXPRESS OR 
 
 The views and conclusions contained in the software and documentation are those of the authors and should not be interpreted as representing official policies, either expressed or implied, of JustBuild Development.
 
-<hr />
+<hr color="#c7c34c" size="2">
 
 ## Using
 
