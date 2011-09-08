@@ -8,42 +8,12 @@
 
     Collaborator
     Everton Moreth
-    LICENSE:
-
-        Copyright 2011 JustBuild Development. All rights reserved.
-
-        Redistribution and use in source and binary forms, with or without
-        modification, are permitted provided that the following conditions
-        are met:
-
-            1. Redistributions of source code must retain the above copyright
-               notice, this list of conditions and the following disclaimer.
-
-            2. Redistributions in binary form must reproduce the above copyright
-               notice, this list of conditions and the following disclaimer in
-               the documentation and/or other materials provided with the
-               distribution.
-
-        THIS SOFTWARE IS PROVIDED BY JUSTBUILD DEVELOPMENT ''AS IS'' AND ANY
-        EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-        IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-        PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL JUSTBUILD DEVELOPMENT OR
-        CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-        EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-        PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-        PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-        LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-        NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-        SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-        The views and conclusions contained in the software and documentation
-        are those of the authors and should not be interpreted as representing
-        official policies, either expressed or implied, of JustBuild Development
-
+    
+	License at LICENSE.md file distributed with this file.
+	
 */
 
 // TODO: Performance - Retrieve only needed settings
-// TODO: Replace Settings requests with Data requests
 // TODO: Implement MVC model
 // TODO: Sitter - Villages save to session storage rather than to localStorage
 
@@ -754,6 +724,8 @@ function buildMarketFillVillagesList() {
 
     devLog("buildMarketFillVillagesList - Selection generated!;");
 
+	// TODO: Make this compatible with Send troops page
+	
     // Creates two radio buttons for choosing the method of city selection
     // These radio buttons does not have names in order to be invisible on the server side
     // (radio with no names are not send on form submission)

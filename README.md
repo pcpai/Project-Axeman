@@ -32,12 +32,24 @@ _This extension uses [Google Chrome](http://www.google.com/chrome "Google Chrome
 - _a lot more..._
 
 
+## Development
+
+Developed by JustBuild Development.
+
+- Aleksandar Toplek _([AleksandarDev](https://github.com/AleksandarDev "Aleksandar Toplek on github"))_
+    
+Collaborator(s):
+    
+- Everton Moreth _([emoreth](https://github.com/emoreth "Everton Moreth on github"))_
+
+
 ## Changelog
 
 
 - **Version 0.2.0** _(18.09.2011.)_
 
-    - Added: SessionStorage/LocalStorage option for sitted villages or players
+    - <div style="color:red;">Added: SessionStorage/LocalStorage option for sitted villages or players</div>
+    - Added: Text box parallel to village selection box
 
 
 - **Version 0.1.7** _(01.09.2011.)_
