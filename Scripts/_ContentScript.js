@@ -315,13 +315,29 @@ function globalOverflowTimer() {
     $("#res").children().each(function(index) {
         // Skips crop consumption
         if (index !== 4) {
-            var current 	= globalGetWarehousAmount(index + 1);
-            var max 		= globalGetWarehousMax(index + 1);
-            var timeLeft 	= (max - current) / village.Resources.production[index];
+            var actualProduction = village.Resources.production[index];
+            if(actualProduction == 0)
+            {
+                $(this).append("<div style='background-color: #EFF5FD;'><b><p id='paResourceOverflowTime" + index + "' style='text-align: right;'>" + _gim("TravianNever") + "</p></b></div>");
+            }
+            else {
+                var current 	= globalGetWarehousAmount(index + 1);
 
+                if(actualProduction > 0) {
+                    var max 		= globalGetWarehousMax(index + 1);
+                    var timeLeft 	= (max - current) / actualProduction;
+
+                    $(this).append("<div style='background-color: #EFF5FD;'><b><p id='paResourceOverflowTime" + index + "' style='text-align: right;'>" + _hoursToTime(timeLeft) + "</p></b></div>");
+                }
+                else {
+                    var timeLeft 	= current / Math.abs(actualProduction);
+
+                    $(this).append("<div style='background-color: #EFF5FD;  color:red !important; border: 1px solid red;'><b><p id='paResourceOverflowTime" + index + "' style='text-align: right;'>" +  _hoursToTime(timeLeft) + "</p></b></div>");
+
+                }
+            }
             devLog("globalOverflowTimer - l" + (index + 1) + " appended!");
 
-            $(this).append("<div style='background-color: #EFF5FD;'><b><p id='paResourceOverflowTime" + index + "' style='text-align: right;'>" + _hoursToTime(timeLeft) + "</p></b></div>");
         }
     });
 
